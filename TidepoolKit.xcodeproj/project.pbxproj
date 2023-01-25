@@ -169,6 +169,10 @@
 		A9EAB8E823DFC77E00874D2A /* DNS.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EAB8E723DFC77E00874D2A /* DNS.swift */; };
 		A9EBE97A27AA42AF00B441BA /* TAlertDatum.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EBE97927AA42AF00B441BA /* TAlertDatum.swift */; };
 		A9EBE97C27AA44F700B441BA /* TAlertDatumTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EBE97B27AA44F700B441BA /* TAlertDatumTests.swift */; };
+		C1821699297E55A7001EB097 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = C1821697297E55A7001EB097 /* InfoPlist.strings */; };
+		C182169C297E55A7001EB097 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C182169A297E55A7001EB097 /* Localizable.strings */; };
+		C182169F297E55A7001EB097 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C182169D297E55A7001EB097 /* Localizable.strings */; };
+		C18216A2297E55A7001EB097 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C18216A0297E55A7001EB097 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -418,6 +422,11 @@
 		A9EAB8E723DFC77E00874D2A /* DNS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNS.swift; sourceTree = "<group>"; };
 		A9EBE97927AA42AF00B441BA /* TAlertDatum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TAlertDatum.swift; sourceTree = "<group>"; };
 		A9EBE97B27AA44F700B441BA /* TAlertDatumTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TAlertDatumTests.swift; sourceTree = "<group>"; };
+		C1821696297E55A7001EB097 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Main.strings; sourceTree = "<group>"; };
+		C1821698297E55A7001EB097 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C182169B297E55A7001EB097 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C182169E297E55A7001EB097 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C18216A1297E55A7001EB097 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -623,6 +632,7 @@
 			children = (
 				A943535323C932A10093CFA3 /* TidepoolKit.h */,
 				A943535423C932A10093CFA3 /* Info.plist */,
+				C182169D297E55A7001EB097 /* Localizable.strings */,
 				A973CD2823D68FE000C44032 /* TAPI.swift */,
 				A994916823FB4CF500865738 /* TEnvironment.swift */,
 				A994916C23FB54D200865738 /* TError.swift */,
@@ -655,6 +665,7 @@
 			children = (
 				A943537123C932BF0093CFA3 /* TidepoolKitUI.h */,
 				A943537223C932BF0093CFA3 /* Info.plist */,
+				C18216A0297E55A7001EB097 /* Localizable.strings */,
 				A973CD2623D68FC300C44032 /* TAPI+UI.swift */,
 				A994917023FB61E400865738 /* Internal */,
 			);
@@ -673,6 +684,8 @@
 			isa = PBXGroup;
 			children = (
 				A943539823C932D20093CFA3 /* Info.plist */,
+				C182169A297E55A7001EB097 /* Localizable.strings */,
+				C1821697297E55A7001EB097 /* InfoPlist.strings */,
 				A943538C23C932D10093CFA3 /* AppDelegate.swift */,
 				A994916623FB288E00865738 /* Logging.swift */,
 				A943538E23C932D10093CFA3 /* RootTableViewController.swift */,
@@ -1086,6 +1099,7 @@
 			knownRegions = (
 				en,
 				Base,
+				es,
 			);
 			mainGroup = A943534623C932A10093CFA3;
 			productRefGroup = A943535123C932A10093CFA3 /* Products */;
@@ -1106,6 +1120,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C182169F297E55A7001EB097 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1121,6 +1136,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A92F62D223D7D0E3007B3CA6 /* Assets.xcassets in Resources */,
+				C18216A2297E55A7001EB097 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1135,7 +1151,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C182169C297E55A7001EB097 /* Localizable.strings in Resources */,
 				A943539723C932D20093CFA3 /* LaunchScreen.storyboard in Resources */,
+				C1821699297E55A7001EB097 /* InfoPlist.strings in Resources */,
 				A943539423C932D20093CFA3 /* Assets.xcassets in Resources */,
 				A943539223C932D10093CFA3 /* Main.storyboard in Resources */,
 			);
@@ -1383,6 +1401,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				A943539123C932D10093CFA3 /* Base */,
+				C1821696297E55A7001EB097 /* es */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -1393,6 +1412,38 @@
 				A943539623C932D20093CFA3 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		C1821697297E55A7001EB097 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C1821698297E55A7001EB097 /* es */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		C182169A297E55A7001EB097 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C182169B297E55A7001EB097 /* es */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		C182169D297E55A7001EB097 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C182169E297E55A7001EB097 /* es */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		C18216A0297E55A7001EB097 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C18216A1297E55A7001EB097 /* es */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

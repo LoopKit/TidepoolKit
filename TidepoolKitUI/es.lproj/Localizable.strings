@@ -1,0 +1,12 @@
+/* Alert title confirming close of Tidepool Service view */
+"Are you sure?" = "";
+
+/* Alert button confirming close of Tidepool Service view */
+"End" = "";
+
+/* Tidepool login environment action sheet title */
+"Environment" = "";
+
+/* Tidepool login button title */
+"Login" = "";
+
