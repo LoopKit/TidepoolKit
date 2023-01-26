@@ -1,12 +1,12 @@
 /* Alert title confirming close of Tidepool Service view */
-"Are you sure?" = "¿Está seguro?";
+"Are you sure?" = "Êtes-vous certain?";
 
 /* Alert button confirming close of Tidepool Service view */
-"End" = "Final";
+"End" = "Fin";
 
 /* Tidepool login environment action sheet title */
-"Environment" = "Ambiente";
+"Environment" = "Environnement";
 
 /* Tidepool login button title */
-"Login" = "Inicio de sesión";
+"Login" = "Connexion";
 

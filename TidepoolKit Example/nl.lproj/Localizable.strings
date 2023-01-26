@@ -2,53 +2,53 @@
 "-" = "-";
 
 /* The title for the header of the authentication section */
-"Authentication" = "Autenticación";
+"Authentication" = "Verificatie";
 
 /* The text label of the create data cell */
-"Create Data" = "Crear Datos";
+"Create Data" = "Data aanmaken";
 
 /* The text label of the create data set cell */
-"Create Data Set" = "Crear Set de Datos";
+"Create Data Set" = "Dataset aanmaken";
 
 /* The title for the header of the data set section */
-"Data Set" = "Set de Datos";
+"Data Set" = "Dataset";
 
 /* The title for the header of the datum section */
-"Datum" = "El Dato";
+"Datum" = "Gegeven";
 
 /* The text label of the delete data cell */
-"Delete Data" = "Borrar Datos";
+"Delete Data" = "Verwijder Data";
 
 /* The title of the error alert */
-"Error" = "Error";
+"Error" = "Fout";
 
 /* The text label of the get profile cell */
-"Get Profile" = "Obtener perfil";
+"Get Profile" = "Profiel Ophalen";
 
 /* The text label of the list data cell */
-"List Data" = "Lista Datos";
+"List Data" = "Maak een lijst van data";
 
 /* The text label of the list data sets cell */
-"List Data Sets" = "Lista Bases de Datos";
+"List Data Sets" = "Maak een lijst van datasets";
 
 /* The text label of the authentication login cell */
-"Login" = "Inicio de sesión";
+"Login" = "Inloggen";
 
 /* The text label of the authentication logout cell */
-"Logout" = "Cerrar sesión";
+"Logout" = "Uitloggen";
 
 /* The title of the OK button in the error alert */
 "OK" = "OK";
 
 /* The title for the header of the profile section */
-"Profile" = "Perfil";
+"Profile" = "Profiel";
 
 /* The text label of the authentication refresh cell */
-"Refresh" = "Actualizar";
+"Refresh" = "Vernieuwen";
 
 /* The title for the header of the status section */
-"Status" = "Estado";
+"Status" = "Status";
 
 /* The title of the text view controller */
-"Text" = "Texto";
+"Text" = "Tekst";
 

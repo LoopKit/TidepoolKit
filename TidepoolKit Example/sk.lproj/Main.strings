@@ -1,0 +1,12 @@
+/* Class = "UILabel"; text = "User ID:"; ObjectID = "7ar-3v-bPv"; */
+"7ar-3v-bPv.text" = "ID používateľa:";
+
+/* Class = "UINavigationItem"; title = "TidepoolKit Example"; ObjectID = "7ZJ-S7-h1P"; */
+"7ZJ-S7-h1P.title" = "TidepoolKit príklad ";
+
+/* Class = "UILabel"; text = "Authentication Token:"; ObjectID = "Bdv-rG-eOg"; */
+"Bdv-rG-eOg.text" = "Autentifikačný token:";
+
+/* Class = "UILabel"; text = "Data Set ID:"; ObjectID = "nnE-kP-79Q"; */
+"nnE-kP-79Q.text" = "ID súboru dát:";
+
