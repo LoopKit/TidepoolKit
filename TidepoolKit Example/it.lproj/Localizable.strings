@@ -29,13 +29,13 @@
 "List Data" = "Elenco dei dati";
 
 /* The text label of the list data sets cell */
-"List Data Sets" = "Lista Dati  Settaggi ";
+"List Data Sets" = "Elenco set di dati";
 
 /* The text label of the authentication login cell */
-"Login" = "Login";
+"Login" = "Accesso";
 
 /* The text label of the authentication logout cell */
-"Logout" = "Logout";
+"Logout" = "Disconnessione";
 
 /* The title of the OK button in the error alert */
 "OK" = "OK";
@@ -47,7 +47,7 @@
 "Refresh" = "Aggiorna";
 
 /* The title for the header of the status section */
-"Status" = "Status";
+"Status" = "Stato";
 
 /* The title of the text view controller */
 "Text" = "Testo";
