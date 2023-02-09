@@ -20,7 +20,7 @@
 "The request returned an unexpected JSON response." = "Het verzoek heeft een onverwacht JSON antwoord geretourneerd.";
 
 /* The default localized description of the response unexpected status code error */
-"The request returned an unexpected response status code." = "Het verzoek heeft een onverwacht statuscode antwoord geretourneerd.";
+"The request returned an unexpected response status code." = "Het verzoek heeft een onverwachte antwoord statuscode geretourneerd.";
 
 /* The default localized description of the response unexpected error */
 "The request returned an unexpected response." = "Het verzoek heeft een onverwacht antwoord geretourneerd.";
@@ -37,7 +37,7 @@
 "The request was not authorized." = "Het verzoek is niet geautoriseerd.";
 
 /* The default localized description of the request resource not found error */
-"The requested resource was not found." = "De gevraagde bron is niet gevonden.";
+"The requested resource was not found." = "De gevraagde hulpbron is niet gevonden.";
 
 /* The default localized description of the session missing error */
 "The session is missing." = "De sessie ontbreekt.";

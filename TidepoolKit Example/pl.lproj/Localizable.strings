@@ -2,53 +2,41 @@
 "-" = "-";
 
 /* The title for the header of the authentication section */
-"Authentication" = "Authentification";
-
-/* The text label of the create data cell */
-"Create Data" = "Créer une donnée";
+"Authentication" = "Uwierzytelnianie";
 
 /* The text label of the create data set cell */
-"Create Data Set" = "Créer une base de donnée";
-
-/* The title for the header of the data set section */
-"Data Set" = "Série de données";
-
-/* The title for the header of the datum section */
-"Datum" = "Datum";
+"Create Data Set" = "Stwórz bazę danych";
 
 /* The text label of the delete data cell */
-"Delete Data" = "Effacer les données";
+"Delete Data" = "Usuń dane";
 
 /* The title of the error alert */
-"Error" = "Erreur";
+"Error" = "Błąd";
 
 /* The text label of the get profile cell */
-"Get Profile" = "Obtenir le profile";
+"Get Profile" = "Pobierz profil";
 
 /* The text label of the list data cell */
-"List Data" = "Lister les données";
-
-/* The text label of the list data sets cell */
-"List Data Sets" = "Lister les bases de données";
+"List Data" = "Lista danych";
 
 /* The text label of the authentication login cell */
-"Login" = "Connexion";
+"Login" = "Login";
 
 /* The text label of the authentication logout cell */
-"Logout" = "Déconnexion";
+"Logout" = "Wyloguj";
 
 /* The title of the OK button in the error alert */
 "OK" = "OK";
 
 /* The title for the header of the profile section */
-"Profile" = "Profile";
+"Profile" = "Profil";
 
 /* The text label of the authentication refresh cell */
-"Refresh" = "Rafraîchir.";
+"Refresh" = "Odśwież";
 
 /* The title for the header of the status section */
-"Status" = "Statut";
+"Status" = "Status";
 
 /* The title of the text view controller */
-"Text" = "Texte";
+"Text" = "Tekst";
 

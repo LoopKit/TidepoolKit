@@ -1,12 +1,12 @@
 /* Alert title confirming close of Tidepool Service view */
-"Are you sure?" = "Confermi?";
+"Are you sure?" = "Вы уверены?";
 
 /* Alert button confirming close of Tidepool Service view */
-"End" = "Fine";
+"End" = "Завершение";
 
 /* Tidepool login environment action sheet title */
-"Environment" = "Ambiente";
+"Environment" = "Environment";
 
 /* Tidepool login button title */
-"Login" = "Accesso";
+"Login" = "Login";
 

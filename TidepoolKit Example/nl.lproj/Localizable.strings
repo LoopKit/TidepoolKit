@@ -5,19 +5,19 @@
 "Authentication" = "Verificatie";
 
 /* The text label of the create data cell */
-"Create Data" = "Data aanmaken";
+"Create Data" = "Gegevens Aanmaken";
 
 /* The text label of the create data set cell */
-"Create Data Set" = "Dataset aanmaken";
+"Create Data Set" = "Gegevensset Aanmaken";
 
 /* The title for the header of the data set section */
-"Data Set" = "Dataset";
+"Data Set" = "Gegevensset";
 
 /* The title for the header of the datum section */
-"Datum" = "Gegeven";
+"Datum" = "Datum";
 
 /* The text label of the delete data cell */
-"Delete Data" = "Verwijder Data";
+"Delete Data" = "Verwijder Gegevens";
 
 /* The title of the error alert */
 "Error" = "Fout";
@@ -26,10 +26,10 @@
 "Get Profile" = "Profiel Ophalen";
 
 /* The text label of the list data cell */
-"List Data" = "Maak een lijst van data";
+"List Data" = "Maak een lijst van gegevens";
 
 /* The text label of the list data sets cell */
-"List Data Sets" = "Maak een lijst van datasets";
+"List Data Sets" = "Maak een lijst van gegevenssets";
 
 /* The text label of the authentication login cell */
 "Login" = "Inloggen";

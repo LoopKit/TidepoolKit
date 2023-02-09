@@ -2,13 +2,13 @@
 "3z1-wF-2wm.text" = "<environment>";
 
 /* Class = "UILabel"; text = "User ID:"; ObjectID = "7ar-3v-bPv"; */
-"7ar-3v-bPv.text" = "Gebruikersnaam:";
+"7ar-3v-bPv.text" = "Identyfikator użytkownika:";
 
 /* Class = "UINavigationItem"; title = "TidepoolKit Example"; ObjectID = "7ZJ-S7-h1P"; */
-"7ZJ-S7-h1P.title" = "TidepoolKit Voorbeeld";
+"7ZJ-S7-h1P.title" = "Przykład TidepoolKit";
 
 /* Class = "UILabel"; text = "Authentication Token:"; ObjectID = "Bdv-rG-eOg"; */
-"Bdv-rG-eOg.text" = "Verificatietoken:";
+"Bdv-rG-eOg.text" = "Token uwierzytelniający:";
 
 /* Class = "UILabel"; text = "<authenticationToken>"; ObjectID = "fUM-Vk-uhD"; */
 "fUM-Vk-uhD.text" = "<authenticationToken>";
@@ -20,8 +20,8 @@
 "IkC-fw-Mnq.text" = "<userId>";
 
 /* Class = "UILabel"; text = "Data Set ID:"; ObjectID = "nnE-kP-79Q"; */
-"nnE-kP-79Q.text" = "Gegevensset ID:";
+"nnE-kP-79Q.text" = "Identyfikator bazy danych:";
 
 /* Class = "UILabel"; text = "Environment:"; ObjectID = "Nov-8h-4fj"; */
-"Nov-8h-4fj.text" = "Omgeving:";
+"Nov-8h-4fj.text" = "Otoczenie:";
 

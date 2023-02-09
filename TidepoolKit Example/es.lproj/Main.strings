@@ -10,6 +10,15 @@
 /* Class = "UILabel"; text = "Authentication Token:"; ObjectID = "Bdv-rG-eOg"; */
 "Bdv-rG-eOg.text" = "Token de Autenticación:";
 
+/* Class = "UILabel"; text = "<authenticationToken>"; ObjectID = "fUM-Vk-uhD"; */
+"fUM-Vk-uhD.text" = "<authenticationToken>";
+
+/* Class = "UILabel"; text = "<dataSetId>"; ObjectID = "hcr-RW-sXt"; */
+"hcr-RW-sXt.text" = "<dataSetId>";
+
+/* Class = "UILabel"; text = "<userId>"; ObjectID = "IkC-fw-Mnq"; */
+"IkC-fw-Mnq.text" = "<userId>";
+
 /* Class = "UILabel"; text = "Data Set ID:"; ObjectID = "nnE-kP-79Q"; */
 "nnE-kP-79Q.text" = "ID de la base de datos:";
 

@@ -4,6 +4,9 @@
 /* Alert button confirming close of Tidepool Service view */
 "End" = "Ukončiť";
 
+/* Tidepool login environment action sheet title */
+"Environment" = "Prostredie";
+
 /* Tidepool login button title */
 "Login" = "Prihlásiť sa";
 

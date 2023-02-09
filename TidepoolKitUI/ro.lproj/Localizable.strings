@@ -1,0 +1,9 @@
+/* Alert title confirming close of Tidepool Service view */
+"Are you sure?" = "Ești sigur?";
+
+/* Tidepool login environment action sheet title */
+"Environment" = "Mediu";
+
+/* Tidepool login button title */
+"Login" = "Conectare";
+
