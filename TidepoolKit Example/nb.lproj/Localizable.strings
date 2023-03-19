@@ -32,13 +32,13 @@
 "List Data Sets" = "Liste datasett";
 
 /* The text label of the authentication login cell */
-"Login" = "Logg inn";
+"Login" = "Pålogging";
 
 /* The text label of the authentication logout cell */
 "Logout" = "Logg ut";
 
 /* The title of the OK button in the error alert */
-"OK" = "OK";
+"OK" = "Ok";
 
 /* The title for the header of the profile section */
 "Profile" = "Profil";

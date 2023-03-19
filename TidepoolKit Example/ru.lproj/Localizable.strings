@@ -38,7 +38,7 @@
 "Logout" = "Выход";
 
 /* The title of the OK button in the error alert */
-"OK" = "ОК";
+"OK" = "OK";
 
 /* The title for the header of the profile section */
 "Profile" = "Профиль";

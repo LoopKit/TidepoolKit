@@ -32,7 +32,7 @@
 "List Data Sets" = "Lista Bases de Datos";
 
 /* The text label of the authentication login cell */
-"Login" = "Inicio de sesión";
+"Login" = "Iniciar sesión";
 
 /* The text label of the authentication logout cell */
 "Logout" = "Cerrar sesión";

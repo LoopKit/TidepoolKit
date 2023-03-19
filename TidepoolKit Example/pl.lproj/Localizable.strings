@@ -35,7 +35,7 @@
 "Login" = "Login";
 
 /* The text label of the authentication logout cell */
-"Logout" = "Wyloguj";
+"Logout" = "Wylogowanie";
 
 /* The title of the OK button in the error alert */
 "OK" = "OK";
