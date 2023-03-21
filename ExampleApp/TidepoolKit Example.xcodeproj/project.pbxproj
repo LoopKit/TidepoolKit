@@ -25,6 +25,7 @@
 		A9C9D2522400CC4300D66F16 /* UIAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C9D2512400CC4300D66F16 /* UIAlertController.swift */; };
 		A9C9D2542400CC6500D66F16 /* UserDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C9D2532400CC6500D66F16 /* UserDefaults.swift */; };
 		A9C9D2562400CD7A00D66F16 /* UTF8TextFileActivityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C9D2552400CD7A00D66F16 /* UTF8TextFileActivityItem.swift */; };
+		C19C9F5729CA121700A6D3D0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C19C9F5929CA121700A6D3D0 /* Localizable.strings */; };
 		C1BC74C029AFC65E00192347 /* TidepoolKit in Frameworks */ = {isa = PBXBuildFile; productRef = C1BC74BF29AFC65E00192347 /* TidepoolKit */; };
 /* End PBXBuildFile section */
 
@@ -80,6 +81,8 @@
 		A9C9D2532400CC6500D66F16 /* UserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaults.swift; sourceTree = "<group>"; };
 		A9C9D2552400CD7A00D66F16 /* UTF8TextFileActivityItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UTF8TextFileActivityItem.swift; sourceTree = "<group>"; };
 		C16A8D8C29AFC50500D79922 /* TidepoolKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = TidepoolKit; sourceTree = "<group>"; };
+		C19C9F5829CA121700A6D3D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C19C9F5B29CA127D00A6D3D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 		C1BC74BE29AFC5D600192347 /* TidepoolKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TidepoolKit; path = ..; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -124,6 +127,7 @@
 				A943539523C932D20093CFA3 /* LaunchScreen.storyboard */,
 				A943539023C932D10093CFA3 /* Main.storyboard */,
 				A9C57C572400636200A5964D /* Support */,
+				C19C9F5929CA121700A6D3D0 /* Localizable.strings */,
 			);
 			path = "TidepoolKit Example";
 			sourceTree = "<group>";
@@ -236,6 +240,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A943539723C932D20093CFA3 /* LaunchScreen.storyboard in Resources */,
+				C19C9F5729CA121700A6D3D0 /* Localizable.strings in Resources */,
 				A943539423C932D20093CFA3 /* Assets.xcassets in Resources */,
 				A943539223C932D10093CFA3 /* Main.storyboard in Resources */,
 			);
@@ -284,6 +289,7 @@
 			isa = PBXVariantGroup;
 			children = (
 				A943539123C932D10093CFA3 /* Base */,
+				C19C9F5B29CA127D00A6D3D0 /* en */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -294,6 +300,14 @@
 				A943539623C932D20093CFA3 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		C19C9F5929CA121700A6D3D0 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C19C9F5829CA121700A6D3D0 /* en */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

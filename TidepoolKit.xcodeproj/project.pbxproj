@@ -179,6 +179,27 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C15ADC5A29CA1688008D80F1 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC5B29CA1690008D80F1 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC5C29CA1696008D80F1 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC5D29CA16A9008D80F1 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		C15ADC5E29CA16B2008D80F1 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC5F29CA16B9008D80F1 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6029CA16C5008D80F1 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6129CA16CD008D80F1 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6229CA16D9008D80F1 /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = nb.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6329CA16E0008D80F1 /* pl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = pl; path = pl.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6429CA175F008D80F1 /* hi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hi; path = hi.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6529CA178D008D80F1 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6629CA1797008D80F1 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		C15ADC6729CA17A5008D80F1 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = vi; path = vi.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6829CA17AC008D80F1 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = da.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6929CA17B4008D80F1 /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = sv.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6A29CA17BA008D80F1 /* fi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fi; path = fi.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6B29CA17C0008D80F1 /* ro */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ro; path = ro.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6C29CA17C5008D80F1 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6D29CA17CB008D80F1 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C15ADC6E29CA17D1008D80F1 /* sk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sk; path = sk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C16DA93E29B8CB6400CC3610 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C19C9F5329CA0E6D00A6D3D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		OBJ_10 /* JSONDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDecoder.swift; sourceTree = "<group>"; };
@@ -806,6 +827,27 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ar,
+				cs,
+				ru,
+				"zh-Hans",
+				nl,
+				fr,
+				de,
+				it,
+				nb,
+				pl,
+				hi,
+				ja,
+				"pt-BR",
+				vi,
+				da,
+				sv,
+				fi,
+				ro,
+				tr,
+				he,
+				sk,
 			);
 			mainGroup = OBJ_5;
 			productRefGroup = OBJ_170 /* Products */;
@@ -1009,6 +1051,27 @@
 			isa = PBXVariantGroup;
 			children = (
 				C19C9F5329CA0E6D00A6D3D0 /* en */,
+				C15ADC5A29CA1688008D80F1 /* ar */,
+				C15ADC5B29CA1690008D80F1 /* cs */,
+				C15ADC5C29CA1696008D80F1 /* ru */,
+				C15ADC5D29CA16A9008D80F1 /* zh-Hans */,
+				C15ADC5E29CA16B2008D80F1 /* nl */,
+				C15ADC5F29CA16B9008D80F1 /* fr */,
+				C15ADC6029CA16C5008D80F1 /* de */,
+				C15ADC6129CA16CD008D80F1 /* it */,
+				C15ADC6229CA16D9008D80F1 /* nb */,
+				C15ADC6329CA16E0008D80F1 /* pl */,
+				C15ADC6429CA175F008D80F1 /* hi */,
+				C15ADC6529CA178D008D80F1 /* ja */,
+				C15ADC6629CA1797008D80F1 /* pt-BR */,
+				C15ADC6729CA17A5008D80F1 /* vi */,
+				C15ADC6829CA17AC008D80F1 /* da */,
+				C15ADC6929CA17B4008D80F1 /* sv */,
+				C15ADC6A29CA17BA008D80F1 /* fi */,
+				C15ADC6B29CA17C0008D80F1 /* ro */,
+				C15ADC6C29CA17C5008D80F1 /* tr */,
+				C15ADC6D29CA17CB008D80F1 /* he */,
+				C15ADC6E29CA17D1008D80F1 /* sk */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
@@ -1163,6 +1226,7 @@
 		OBJ_3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -1174,6 +1238,11 @@
 					"$(inherited)",
 					"SWIFT_PACKAGE=1",
 					"DEBUG=1",
+				);
+				LOCALIZED_STRING_MACRO_NAMES = (
+					NSLocalizedString,
+					CFCopyLocalizedString,
+					LocalizedString,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1191,6 +1260,7 @@
 		OBJ_4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
@@ -1200,6 +1270,11 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"SWIFT_PACKAGE=1",
+				);
+				LOCALIZED_STRING_MACRO_NAMES = (
+					NSLocalizedString,
+					CFCopyLocalizedString,
+					LocalizedString,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_SWIFT_FLAGS = "$(inherited) -DXcode";
