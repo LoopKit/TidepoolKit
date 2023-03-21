@@ -22,6 +22,7 @@
 
 /* Begin PBXBuildFile section */
 		C16DA94529B8CDF400CC3610 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C16DA93E29B8CB6400CC3610 /* Assets.xcassets */; };
+		C19C9F5229CA0E6D00A6D3D0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C19C9F5429CA0E6D00A6D3D0 /* Localizable.strings */; };
 		OBJ_181 /* JSONDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* JSONDecoder.swift */; };
 		OBJ_182 /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* JSONEncoder.swift */; };
 		OBJ_183 /* ActionButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* ActionButtonStyle.swift */; };
@@ -179,6 +180,7 @@
 
 /* Begin PBXFileReference section */
 		C16DA93E29B8CB6400CC3610 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C19C9F5329CA0E6D00A6D3D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		OBJ_10 /* JSONDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDecoder.swift; sourceTree = "<group>"; };
 		OBJ_103 /* JSONDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDecoderTests.swift; sourceTree = "<group>"; };
 		OBJ_104 /* JSONEncoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONEncoderTests.swift; sourceTree = "<group>"; };
@@ -344,6 +346,7 @@
 			isa = PBXGroup;
 			children = (
 				C16DA93E29B8CB6400CC3610 /* Assets.xcassets */,
+				C19C9F5429CA0E6D00A6D3D0 /* Localizable.strings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -823,6 +826,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C16DA94529B8CDF400CC3610 /* Assets.xcassets in Resources */,
+				C19C9F5229CA0E6D00A6D3D0 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -999,6 +1003,17 @@
 			targetProxy = C16DA93C29B8CB4A00CC3610 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		C19C9F5429CA0E6D00A6D3D0 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C19C9F5329CA0E6D00A6D3D0 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		OBJ_178 /* Debug */ = {
