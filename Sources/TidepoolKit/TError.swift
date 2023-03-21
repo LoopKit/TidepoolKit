@@ -81,39 +81,39 @@ extension TError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .network:
-            return NSLocalizedString("A network error occurred.", comment: "The default localized description of the network error")
+            return LocalizedString("A network error occurred.", comment: "The default localized description of the network error")
         case .sessionMissing:
-            return NSLocalizedString("The session is missing.", comment: "The default localized description of the session missing error")
+            return LocalizedString("The session is missing.", comment: "The default localized description of the session missing error")
         case .requestInvalid:
-            return NSLocalizedString("The request was invalid.", comment: "The default localized description of the request invalid error")
+            return LocalizedString("The request was invalid.", comment: "The default localized description of the request invalid error")
         case .requestMalformed:
-            return NSLocalizedString("The request was invalid.", comment: "The default localized description of the request malformed error")
+            return LocalizedString("The request was invalid.", comment: "The default localized description of the request malformed error")
         case .requestMalformedJSON:
-            return NSLocalizedString("The request was invalid.", comment: "The default localized description of the request malformed JSON error")
+            return LocalizedString("The request was invalid.", comment: "The default localized description of the request malformed JSON error")
         case .requestNotAuthenticated:
-            return NSLocalizedString("The request was not authenticated.", comment: "The default localized description of the request not authenticated error")
+            return LocalizedString("The request was not authenticated.", comment: "The default localized description of the request not authenticated error")
         case .requestNotAuthorized:
-            return NSLocalizedString("The request was not authorized.", comment: "The default localized description of the request not authorized error")
+            return LocalizedString("The request was not authorized.", comment: "The default localized description of the request not authorized error")
         case .requestEmailNotVerified:
-            return NSLocalizedString("The email is not verified.", comment: "The default localized description of the request email not verified error")
+            return LocalizedString("The email is not verified.", comment: "The default localized description of the request email not verified error")
         case .requestTermsOfServiceNotAccepted:
-            return NSLocalizedString("The Terms of Service are not accepted.", comment: "The default localized description of the request terms of service not accepted error")
+            return LocalizedString("The Terms of Service are not accepted.", comment: "The default localized description of the request terms of service not accepted error")
         case .requestResourceNotFound:
-            return NSLocalizedString("The requested resource was not found.", comment: "The default localized description of the request resource not found error")
+            return LocalizedString("The requested resource was not found.", comment: "The default localized description of the request resource not found error")
         case .responseUnexpected:
-            return NSLocalizedString("The request returned an unexpected response.", comment: "The default localized description of the response unexpected error")
+            return LocalizedString("The request returned an unexpected response.", comment: "The default localized description of the response unexpected error")
         case .responseUnexpectedStatusCode:
-            return NSLocalizedString("The request returned an unexpected response status code.", comment: "The default localized description of the response unexpected status code error")
+            return LocalizedString("The request returned an unexpected response status code.", comment: "The default localized description of the response unexpected status code error")
         case .responseNotAuthenticated:
-            return NSLocalizedString("The request returned an unauthenticated response.", comment: "The default localized description of the response not authenticated error")
+            return LocalizedString("The request returned an unauthenticated response.", comment: "The default localized description of the response not authenticated error")
         case .responseMissingJSON:
-            return NSLocalizedString("The request returned an empty JSON response.", comment: "The default localized description of the response missing JSON error")
+            return LocalizedString("The request returned an empty JSON response.", comment: "The default localized description of the response missing JSON error")
         case .responseMalformedJSON:
-            return NSLocalizedString("The request returned an invalid JSON response.", comment: "The default localized description of the response malformed JSON error")
+            return LocalizedString("The request returned an invalid JSON response.", comment: "The default localized description of the response malformed JSON error")
         case .responseUnexpectedJSON:
-            return NSLocalizedString("The request returned an unexpected JSON response.", comment: "The default localized description of the response unexpected JSON error")
+            return LocalizedString("The request returned an unexpected JSON response.", comment: "The default localized description of the response unexpected JSON error")
         case .responseMalformedData:
-            return NSLocalizedString("The request returned an invalid response.", comment: "The default localized description of the response malformed data error")
+            return LocalizedString("The request returned an invalid response.", comment: "The default localized description of the response malformed data error")
         }
     }
 }

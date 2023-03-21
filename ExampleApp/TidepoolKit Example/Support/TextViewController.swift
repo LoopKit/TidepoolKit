@@ -18,7 +18,7 @@ class TextViewController: UIViewController {
 
         super.init(nibName: nil, bundle: nil)
 
-        self.title = title ?? NSLocalizedString("Text", comment: "The title of the text view controller")
+        self.title = title ?? LocalizedString("Text", comment: "The title of the text view controller")
     }
 
     required init?(coder: NSCoder) {

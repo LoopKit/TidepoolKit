@@ -19,7 +19,7 @@ extension UIAlertController {
     }
 
     private convenience init(errorString: String, handler: (() -> Void)? = nil) {
-        self.init(title: NSLocalizedString("Error", comment: "The title of the error alert"), message: errorString, preferredStyle: .alert)
-        addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "The title of the OK button in the error alert"), style: .default) { _ in handler?() })
+        self.init(title: LocalizedString("Error", comment: "The title of the error alert"), message: errorString, preferredStyle: .alert)
+        addAction(UIAlertAction(title: LocalizedString("OK", comment: "The title of the OK button in the error alert"), style: .default) { _ in handler?() })
     }
 }
