@@ -1,7 +1,3 @@
-/* 
-  Localizable.strings
-  TidepoolKit
+/* Tidepool login button title */
+"Login" = "Kirjaudu";
 
-  Created by Pete Schwamb on 3/21/23.
-  
-*/

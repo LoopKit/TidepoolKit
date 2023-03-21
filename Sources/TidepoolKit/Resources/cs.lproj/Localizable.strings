@@ -1,7 +1,18 @@
-/* 
-  Localizable.strings
-  TidepoolKit
+/* Alert title confirming close of Tidepool Service view */
+"Are you sure?" = "Potvrdit uzavření";
 
-  Created by Pete Schwamb on 3/21/23.
-  
-*/
+/* Alert button confirming close of Tidepool Service view */
+"End" = "Ukončit";
+
+/* Tidepool login environment action sheet title */
+"Environment" = "Prostředí";
+
+/* Tidepool login button title */
+"Login" = "Přihlásit se";
+
+/* The default localized description of the request resource not found error */
+"The requested resource was not found." = "Požadovaný zdroj nebyl nalezen.";
+
+/* The default localized description of the session missing error */
+"The session is missing." = "Relace chybí.";
+

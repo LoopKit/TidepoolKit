@@ -179,6 +179,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C100F68429CA25E100586CAB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C15ADC5A29CA1688008D80F1 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C15ADC5B29CA1690008D80F1 /* cs */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = cs; path = cs.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C15ADC5C29CA1696008D80F1 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -201,7 +202,7 @@
 		C15ADC6D29CA17CB008D80F1 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C15ADC6E29CA17D1008D80F1 /* sk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sk; path = sk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C16DA93E29B8CB6400CC3610 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		C19C9F5329CA0E6D00A6D3D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C1B1539429CA264600563369 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		OBJ_10 /* JSONDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDecoder.swift; sourceTree = "<group>"; };
 		OBJ_103 /* JSONDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDecoderTests.swift; sourceTree = "<group>"; };
 		OBJ_104 /* JSONEncoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONEncoderTests.swift; sourceTree = "<group>"; };
@@ -848,6 +849,7 @@
 				tr,
 				he,
 				sk,
+				es,
 			);
 			mainGroup = OBJ_5;
 			productRefGroup = OBJ_170 /* Products */;
@@ -1050,7 +1052,6 @@
 		C19C9F5429CA0E6D00A6D3D0 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C19C9F5329CA0E6D00A6D3D0 /* en */,
 				C15ADC5A29CA1688008D80F1 /* ar */,
 				C15ADC5B29CA1690008D80F1 /* cs */,
 				C15ADC5C29CA1696008D80F1 /* ru */,
@@ -1072,6 +1073,8 @@
 				C15ADC6C29CA17C5008D80F1 /* tr */,
 				C15ADC6D29CA17CB008D80F1 /* he */,
 				C15ADC6E29CA17D1008D80F1 /* sk */,
+				C100F68429CA25E100586CAB /* en */,
+				C1B1539429CA264600563369 /* es */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
