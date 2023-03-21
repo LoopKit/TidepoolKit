@@ -3,15 +3,12 @@ version: 2.1
 jobs:
   build:
     macos:
-      xcode: 12.2.0
+      xcode: 14.1.0
     steps:
       - checkout
       - run:
-          name: Build TidepoolKit
-          command: set -o pipefail && time xcrun xcodebuild -project 'TidepoolKit.xcodeproj' -scheme 'Shared' build -destination 'name=iPhone 8' build | xcpretty
-      - run:
           name: Run TidepoolKit unit tests
-          command: set -o pipefail && time xcrun xcodebuild -project 'TidepoolKit.xcodeproj' -scheme 'Shared' build -destination 'name=iPhone 8' test | xcpretty
+          command: set -o pipefail && time xcrun xcodebuild -scheme 'TidepoolKit' build -destination 'platform=iOS Simulator,OS=16.1,name=iPhone 14' test | xcpretty 
       - run:
           name: Build TidepoolKit Example
-          command: set -o pipefail && time xcrun xcodebuild -project 'TidepoolKit.xcodeproj' -scheme 'TidepoolKit Example' -destination 'name=iPhone 8' build CODE_SIGNING_ALLOWED=NO | xcpretty
+          command: set -o pipefail && time xcrun xcodebuild -project 'ExampleApp/TidepoolKit Example.xcodeproj' -scheme 'TidepoolKit Example' -destination 'platform=iOS Simulator,OS=16.1,name=iPhone 14' build CODE_SIGNING_ALLOWED=NO | xcpretty
