@@ -17,6 +17,18 @@ public enum TError: Error {
     /// The session is missing.
     case sessionMissing
 
+    /// Missing authentication issuer.
+    case missingAuthenticationIssuer
+
+    /// Missing authentication configuration.
+    case missingAuthenticationConfiguration
+
+    /// Missing authentication token.
+    case missingAuthenticationToken
+
+    /// Missing authentication state.
+    case missingAuthenticationState
+
     /// The request was invalid and not sent.
     case requestInvalid
 
@@ -84,6 +96,14 @@ extension TError: LocalizedError {
             return LocalizedString("A network error occurred.", comment: "The default localized description of the network error")
         case .sessionMissing:
             return LocalizedString("The session is missing.", comment: "The default localized description of the session missing error")
+        case .missingAuthenticationIssuer:
+            return LocalizedString("Missing authentication issuer.", comment: "The default localized description of the missingAuthenticationIssuer error")
+        case .missingAuthenticationConfiguration:
+            return LocalizedString("Missing authentication configuration.", comment: "The default localized description of the missingAuthenticationConfiguration error")
+        case .missingAuthenticationToken:
+            return LocalizedString("Missing authentication token.", comment: "The default localized description of the missingAuthenticationToken error")
+        case .missingAuthenticationState:
+            return LocalizedString("Missing authentication state.", comment: "The default localized description of the missingAuthenticationState error")
         case .requestInvalid:
             return LocalizedString("The request was invalid.", comment: "The default localized description of the request invalid error")
         case .requestMalformed:

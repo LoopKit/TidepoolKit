@@ -168,7 +168,7 @@ public struct LoginSignupView: View {
 struct LoginSignupView_Previews: PreviewProvider {
     static var previews: some View {
         ContentPreview {
-            LoginSignupView(viewModel: LoginSignupViewModel(api: TAPI()))
+            LoginSignupView(viewModel: LoginSignupViewModel(api: TAPI(clientId: "tidepool-loop", redirectURL: URL(string: "org.tidepool.Loop://tidepool_service_redirect")!)))
         }
     }
 }

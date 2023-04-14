@@ -8,7 +8,9 @@
 
 import os.log
 import UIKit
+import SwiftUI
 import TidepoolKit
+
 
 class RootTableViewController: UITableViewController, TAPIObserver {
     private let api: TAPI
@@ -36,7 +38,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
     private let logging = Logging()
 
     required init?(coder: NSCoder) {
-        self.api = TAPI(session: UserDefaults.standard.session)
+        self.api = TAPI(clientId: "diy-loop", redirectURL:  URL(string: "org.loopkit.Loop://tidepool_service_redirect")!, session: UserDefaults.standard.session)
         self.environment = UserDefaults.standard.environment
         self.dataSetId = UserDefaults.standard.dataSetId
 
@@ -44,10 +46,6 @@ class RootTableViewController: UITableViewController, TAPIObserver {
 
         api.logging = logging
         api.addObserver(self)
-    }
-
-    deinit {
-        api.removeObserver(self)
     }
 
     func apiDidUpdateSession(_ session: TSession?) {
@@ -106,9 +104,8 @@ class RootTableViewController: UITableViewController, TAPIObserver {
     }
 
     private enum Authentication: Int, CaseIterable {
-        case login
+        case account
         case refresh
-        case logout
     }
 
     private enum Profile: Int, CaseIterable {
@@ -174,15 +171,12 @@ class RootTableViewController: UITableViewController, TAPIObserver {
         case .authentication:
             let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath) as! TextButtonTableViewCell
             switch Authentication(rawValue: indexPath.row)! {
-            case .login:
-                cell.textLabel?.text = NSLocalizedString("Login", comment: "The text label of the authentication login cell")
+            case .account:
+                cell.textLabel?.text = NSLocalizedString("Account", comment: "The text label of the account cell")
                 cell.accessoryType = .disclosureIndicator
                 cell.isEnabled = api.session == nil
             case .refresh:
                 cell.textLabel?.text = NSLocalizedString("Refresh", comment: "The text label of the authentication refresh cell")
-                cell.isEnabled = api.session != nil
-            case .logout:
-                cell.textLabel?.text = NSLocalizedString("Logout", comment: "The text label of the authentication logout cell")
                 cell.isEnabled = api.session != nil
             }
             return cell
@@ -230,8 +224,8 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             return false
         case .authentication:
             switch Authentication(rawValue: indexPath.row)! {
-            case .login:
-                return api.session == nil
+            case .account:
+                return true
             default:
                 return api.session != nil
             }
@@ -257,12 +251,10 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             let cell = tableView.cellForRow(at: indexPath) as! TextButtonTableViewCell
             cell.isLoading = true
             switch Authentication(rawValue: indexPath.row)! {
-            case .login:
+            case .account:
                 login(completion: cell.stopLoading)
             case .refresh:
                 refresh(completion: cell.stopLoading)
-            case .logout:
-                logout(completion: cell.stopLoading)
             }
         case .profile:
             let cell = tableView.cellForRow(at: indexPath) as! TextButtonTableViewCell
@@ -295,10 +287,14 @@ class RootTableViewController: UITableViewController, TAPIObserver {
     // MARK: - Authentication
 
     private func login(completion: @escaping () -> Void) {
-        var loginSignupViewController = api.loginSignupViewController()
-        loginSignupViewController.loginSignupDelegate = self
-        loginSignupViewController.environment = environment
-        present(loginSignupViewController, animated: true)
+        let viewModel = LoginViewModel(api: api)
+        let view = LoginView(viewModel: viewModel)
+        let loginViewController = UIHostingController(rootView: view)
+        viewModel.presentingViewController = loginViewController
+//        var loginSignupViewController = api.loginSignupViewController()
+//        loginSignupViewController.loginSignupDelegate = self
+//        loginSignupViewController.environment = environment
+        present(loginViewController, animated: true)
         completion()
     }
 
@@ -314,14 +310,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
     }
 
     private func logout(completion: @escaping () -> Void) {
-        api.logout() { error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    self.present(UIAlertController(error: error), animated: true)
-                }
-                completion()
-            }
-        }
+        api.logout()
     }
 
     // MARK: - Profile

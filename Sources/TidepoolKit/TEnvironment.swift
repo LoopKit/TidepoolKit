@@ -25,6 +25,15 @@ public struct TEnvironment: Codable, Equatable {
         self.port = port
     }
 
+    public var authenticationURL: URL {
+        switch host {
+        case "external.integration.tidepool.org":
+            return URL(string: "https://auth.integration.tidepool.org/realms/integration/")!
+        default:
+            return URL(string: "https://auth.tidepool.org/realms/tidepool/")!
+        }
+    }
+
     public func url(path: String = "/", queryItems: [URLQueryItem]? = nil) -> URL? {
         var components = URLComponents()
         components.host = host

@@ -25,13 +25,13 @@ public class LoginSignupViewModel: TLoginSignup {
     var resolvedEnvironment: TEnvironment { environment ?? defaultEnvironment ?? environments.first! }
 
     func login(email: String, password: String, completion: @escaping (Error?) -> Void) {
-        api.login(environment: resolvedEnvironment, email: email, password: password) { error in
-            if let error = error {
-                completion(error)
-                return
-            }
-            self.loginSignupDelegate?.loginSignupDidComplete(completion: completion)
-        }
+//        api.login(environment: <#T##TEnvironment#>, presenting: <#T##UIViewController#>, completion: <#T##(TError?) -> Void#>)
+//            if let error = error {
+//                completion(error)
+//                return
+//            }
+//            self.loginSignupDelegate?.loginSignupDidComplete(completion: completion)
+//        }
     }
 
     func cancel() {

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AppAuth
 
 /// Observer of the Tidepool API
 public protocol TAPIObserver: AnyObject {
@@ -63,12 +64,22 @@ public class TAPI {
 
     private var observers = WeakSynchronizedSet<TAPIObserver>()
 
+    private var clientId: String
+
+    private var redirectURL: URL
+
+    private var currentAuthorizationFlow: OIDExternalUserAgentSession?
+
     /// Create a new instance of TAPI. Automatically lookup additional environments in the background.
     ///
     /// - Parameters:
+    ///   - clientId: The client id to use when authenticating
+    ///   - redirectURL: The redirect url use when authenticating
     ///   - session: The initial session to use, if any.
     ///   - automaticallyFetchEnvironments: Automatically fetch an updated list of environments when created.
-    public init(session: TSession? = nil, automaticallyFetchEnvironments: Bool = true) {
+    public init(clientId: String, redirectURL: URL, session: TSession? = nil, automaticallyFetchEnvironments: Bool = true) {
+        self.clientId = clientId
+        self.redirectURL = redirectURL
         self.environmentsLocked = Locked(TAPI.implicitEnvironments)
         self.urlSessionConfigurationLocked = Locked(TAPI.defaultURLSessionConfiguration)
         self.urlSessionLocked = Locked(nil)
@@ -95,6 +106,7 @@ public class TAPI {
         observers.removeElement(observer)
     }
 
+
     // MARK: - Environment
 
     /// Manually fetch the latest environments. Production is always the first element.
@@ -102,7 +114,7 @@ public class TAPI {
     /// - Parameters:
     ///   - completion: The completion function to invoke with the latest environments or any error.
     public func fetchEnvironments(completion: ((Result<[TEnvironment], TError>) -> Void)? = nil) {
-        DispatchQueue.global(qos: .background).async {
+        Task {
             DNS.lookupSRVRecords(for: TAPI.DNSSRVRecordsDomainName) { result in
                 switch result {
                 case .failure(let error):
@@ -126,6 +138,94 @@ public class TAPI {
     }
 
     // MARK: - Authentication
+
+    /// Login to the Tidepool environment using AppAuth (OAuth2/OpenID-Connect)
+    /// used internally by the LoginSignupViewController.
+    ///
+    /// - Parameters:
+    ///   - environment: The environment to login.
+    ///   - presenting: A UIViewController to present the login modal from. Can be UIApplication.shared.windows.first!.rootViewController!
+    ///   - completion: The completion function to invoke with any error.
+    public func login(environment: TEnvironment, presenting: UIViewController, completion: @escaping (TError?) -> Void) {
+
+        // Lookup /info for current environment
+        getInfo(environment: environment) { result in
+            switch result {
+            case .success(let info):
+                if let issuer = info.auth?.issuerURL {
+                    OIDAuthorizationService.discoverConfiguration(forIssuer: issuer) { configuration, error in
+                        guard error == nil else {
+                            self.logging?.error("Unable to discover authentication configuration: \(error!)")
+                            completion(.network(error))
+                            return
+                        }
+
+                        guard let config = configuration else {
+                            self.logging?.error("Error retrieving discovery document: No configuration")
+                            completion(.missingAuthenticationConfiguration)
+                            return
+                        }
+
+                        let request = OIDAuthorizationRequest(
+                            configuration: config,
+                            clientId: self.clientId,
+                            clientSecret: nil,
+                            scopes: ["openid", "offline_access"],
+                            redirectURL: self.redirectURL,
+                            responseType: OIDResponseTypeCode,
+                            additionalParameters: [:]
+                        )
+
+                        self.currentAuthorizationFlow = OIDAuthState.authState(byPresenting: request, presenting: presenting) { authState, error in
+                            if let error = error {
+                                completion(.network(error))
+                                self.logging?.error("Authorization error: \(error)")
+                                return
+                            }
+
+                            if let authState = authState {
+                                if let accessToken = authState.lastTokenResponse?.accessToken {
+                                    self.logging?.debug("Authorization successful, access token: \(accessToken)")
+
+                                    // TODO: need to fetch user info
+                                    // https://external.integration.tidepool.org/auth/user
+                                    // Returns:
+                                    /* {
+                                     "emailVerified":true,
+                                     "emails":[
+                                        "name@email.org"
+                                     ],
+                                     "roles":[
+                                        "default-roles-integration",
+                                        "patient"
+                                     ],
+                                     "termsAccepted":"2023-01-19T21:34:27+00:00",
+                                     "userid":"e631fc5a-1234-4686-a498-8f2bbfec55b6",
+                                     "username":"name@email.org"
+                                  } */
+
+
+                                    self.session = TSession(environment: environment, authenticationToken: accessToken, userId: "unknown", email: "unknown")
+                                    completion(nil)
+                                } else {
+                                    completion(.missingAuthenticationToken)
+                                    self.logging?.error("No access token received")
+                                }
+                            } else {
+                                completion(.missingAuthenticationState)
+                                self.logging?.error("No authorization state")
+                            }
+                        }
+
+                    }
+                } else {
+                    completion(.missingAuthenticationIssuer)
+                }
+            case .failure(let error):
+                completion(error)
+            }
+        }
+    }
 
     /// Login to the Tidepool environment using the email and password. This is not typically invoked directly, but instead is
     /// used internally by the LoginSignupViewController.
@@ -185,6 +285,7 @@ public class TAPI {
             switch result {
             case .failure(let error):
                 if case .requestNotAuthenticated = error {
+                    self.logging?.error("Authentication failed during session refresh request \(String(describing: request)), \(error)")
                     self.session = nil
                 }
                 completion(error)
@@ -201,21 +302,8 @@ public class TAPI {
 
     /// Logout the Tidepool API session.
     ///
-    /// - Parameters:
-    ///   - completion: The completion function to invoke with any error.
-    public func logout(completion: @escaping (TError?) -> Void) {
-        guard session != nil else {
-            completion(.sessionMissing)
-            return
-        }
-
-        let request = createRequest(method: "POST", path: "/auth/logout")
-        performRequest(request, allowSessionRefresh: false) { (error: TError?) -> Void in
-            if error == nil {
-                self.session = nil
-            }
-            completion(error)
-        }
+    public func logout() {
+        self.session = nil
     }
 
     // MARK: - Info
@@ -561,7 +649,6 @@ public class TAPI {
         request?.setValue("application/json; charset=utf-8", forHTTPHeaderField: HTTPHeaderField.contentType.rawValue)
         do {
             let encoded = try JSONEncoder.tidepool.encode(body)
-            logging?.debug("Sending: " + (String(data: encoded, encoding: .utf8) ?? "invalid request"))
             request?.httpBody = encoded
         } catch let error {
             logging?.error("Failure encoding request body [\(error)]")
@@ -651,18 +738,30 @@ public class TAPI {
     }
 
     private func performRequest(_ request: URLRequest?, allowSessionRefreshAfterFailure: Bool, completion: @escaping (HTTPResult) -> Void) {
-        guard let request = request else {
+        guard let request else {
             completion(.failure(.requestInvalid))
             return
         }
 
+        logging?.debug("Sending: \(request)")
+        logging?.debug("Headers: \(String(describing: request.allHTTPHeaderFields))")
+        if let body = request.httpBody, let bodyStr = String(data:body, encoding: .utf8) {
+            logging?.debug("Body: \(bodyStr)")
+        }
+
         let task = urlSession.dataTask(with: request) { (data, response, error) in
-            if let error = error {
+            if let error {
+                self.logging?.debug("Error: \(error)")
                 completion(.failure(.network(error)))
             } else if let response = response as? HTTPURLResponse {
                 if allowSessionRefreshAfterFailure, response.statusCode == 401 {
+                    self.logging?.info("Refreshing session")
                     self.refreshSessionAndPerformRequest(request, completion: completion)
                 } else {
+                    if let data, let responseBody = String(data: data, encoding: .utf8) {
+                        self.logging?.debug("Received \(responseBody)")
+                    }
+                    self.logging?.info("Refreshing session")
                     completion(self.processStatusCode(response: response, data: data))
                 }
             } else {
