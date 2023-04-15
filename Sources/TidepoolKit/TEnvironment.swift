@@ -34,7 +34,7 @@ public struct TEnvironment: Codable, Equatable {
         }
     }
 
-    public func url(path: String = "/", queryItems: [URLQueryItem]? = nil) -> URL? {
+    public func url(path: String = "/", queryItems: [URLQueryItem]? = nil) throws -> URL {
         var components = URLComponents()
         components.host = host
         switch port {
@@ -48,7 +48,10 @@ public struct TEnvironment: Codable, Equatable {
         }
         components.path = path.hasPrefix("/") ? path : "/\(path)"
         components.queryItems = queryItems
-        return components.url
+        guard let url = components.url else {
+            throw TError.invalidURL(components)
+        }
+        return url
     }
 }
 

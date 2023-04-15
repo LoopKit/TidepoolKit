@@ -24,6 +24,7 @@ extension LoginViewModelError: LocalizedError {
     }
 }
 
+@MainActor
 public class LoginViewModel: ObservableObject {
 
     var loggedIn: Bool {
@@ -47,19 +48,12 @@ public class LoginViewModel: ObservableObject {
         api.logout()
     }
 
-    func login(completion: @escaping (Error?) -> Void) {
-
+    func login() async throws {
         if let presentingViewController {
-            api.login(environment: resolvedEnvironment, presenting: presentingViewController) { error in
-                if let error = error {
-                    completion(error)
-                    return
-                }
-                completion(nil)
-            }
+            try await api.login(environment: resolvedEnvironment, presenting: presentingViewController)
         }
         else {
-            completion(LoginViewModelError.configurationMissing)
+            throw LoginViewModelError.configurationMissing
         }
     }
 }

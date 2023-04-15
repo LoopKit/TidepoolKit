@@ -9,10 +9,10 @@
 import SwiftUI
 import TidepoolKit
 
+@MainActor
 public struct LoginView: View {
 
     @Environment(\.dismiss) var dismiss
-
 
     @State private var isEnvironmentActionSheetPresented = false
     @State private var message = ""
@@ -100,7 +100,11 @@ public struct LoginView: View {
     }
 
     private var loginButton: some View {
-        Button(action: login) {
+        Button(action: {
+            Task {
+                await login()
+            }
+        }) {
             if isLoggingIn {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
@@ -124,18 +128,18 @@ public struct LoginView: View {
         .disabled(isLoggingIn)
     }
 
-    private func login() {
+    private func login() async {
         guard !isLoggingIn else {
             return
         }
 
         isLoggingIn = true
-        viewModel.login() { error in
+        do {
+            try await viewModel.login()
+            dismiss()
+        } catch {
             setError(error)
             isLoggingIn = false
-            if error == nil {
-                dismiss()
-            }
         }
     }
 

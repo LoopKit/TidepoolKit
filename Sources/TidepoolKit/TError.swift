@@ -32,6 +32,8 @@ public enum TError: Error {
     /// The request was invalid and not sent.
     case requestInvalid
 
+    case invalidURL(URLComponents)
+
     /// The server responded that the request was bad or malformed. Equivalent to HTTP status code 400.
     case requestMalformed(HTTPURLResponse, Data?)
 
@@ -72,7 +74,7 @@ public enum TError: Error {
     case responseUnexpectedJSON(HTTPURLResponse, Data)
 
     /// The server response included malformed data.
-    case responseMalformedData(HTTPURLResponse, Data)
+    case responseMalformed(TAPI.MalformedResult)
 
     public struct Detail: Codable, Equatable {
         public var code: String
@@ -106,6 +108,8 @@ extension TError: LocalizedError {
             return LocalizedString("Missing authentication state.", comment: "The default localized description of the missingAuthenticationState error")
         case .requestInvalid:
             return LocalizedString("The request was invalid.", comment: "The default localized description of the request invalid error")
+        case .invalidURL(let components):
+            return String(format: LocalizedString("Failure creating request URL: %1$@", comment: "Error description for invalidURL (1: url components)"), String(describing: components))
         case .requestMalformed:
             return LocalizedString("The request was invalid.", comment: "The default localized description of the request malformed error")
         case .requestMalformedJSON:
@@ -132,7 +136,7 @@ extension TError: LocalizedError {
             return LocalizedString("The request returned an invalid JSON response.", comment: "The default localized description of the response malformed JSON error")
         case .responseUnexpectedJSON:
             return LocalizedString("The request returned an unexpected JSON response.", comment: "The default localized description of the response unexpected JSON error")
-        case .responseMalformedData:
+        case .responseMalformed:
             return LocalizedString("The request returned an invalid response.", comment: "The default localized description of the response malformed data error")
         }
     }

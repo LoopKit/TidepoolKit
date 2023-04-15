@@ -258,27 +258,36 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             }
         case .profile:
             let cell = tableView.cellForRow(at: indexPath) as! TextButtonTableViewCell
-            cell.isLoading = true
-            getProfile(completion: cell.stopLoading)
+            Task {
+                cell.isLoading = true
+                await getProfile()
+                cell.stopLoading()
+            }
         case .dataSet:
             let cell = tableView.cellForRow(at: indexPath) as! TextButtonTableViewCell
             cell.isLoading = true
-            switch DataSet(rawValue: indexPath.row)! {
-            case .list:
-                listDataSets(completion: cell.stopLoading)
-            case .create:
-                createDataSet(completion: cell.stopLoading)
+            Task {
+                switch DataSet(rawValue: indexPath.row)! {
+                case .list:
+                    await listDataSets()
+                case .create:
+                    await createDataSet()
+                }
+                cell.stopLoading()
             }
         case .datum:
             let cell = tableView.cellForRow(at: indexPath) as! TextButtonTableViewCell
             cell.isLoading = true
-            switch Datum(rawValue: indexPath.row)! {
-            case .list:
-                listData(completion: cell.stopLoading)
-            case .create:
-                createData(completion: cell.stopLoading)
-            case .delete:
-                deleteData(completion: cell.stopLoading)
+            Task {
+                switch Datum(rawValue: indexPath.row)! {
+                case .list:
+                    await listData()
+                case .create:
+                    await createData()
+                case .delete:
+                    await deleteData()
+                }
+                cell.stopLoading()
             }
         }
         tableView.deselectRow(at: indexPath, animated: true)
@@ -315,109 +324,84 @@ class RootTableViewController: UITableViewController, TAPIObserver {
 
     // MARK: - Profile
 
-    private func getProfile(completion: @escaping () -> Void) {
-        api.getProfile() { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let error):
-                    self.present(UIAlertController(error: error), animated: true)
-                case .success(let profile):
-                    self.display(profile, withTitle: "Get Profile")
-                }
-                completion()
-            }
+    private func getProfile() async {
+        do {
+            let profile = try await api.getProfile()
+            self.display(profile, withTitle: "Get Profile")
+        } catch {
+            self.present(UIAlertController(error: error), animated: true)
         }
     }
 
     // MARK: - Data Set
 
-    private func listDataSets(completion: @escaping () -> Void) {
+    private func listDataSets() async {
         let filter = TDataSet.Filter(clientName: Bundle.main.bundleIdentifier)
-        api.listDataSets(filter: filter) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let error):
-                    self.present(UIAlertController(error: error), animated: true)
-                case .success(let dataSets):
-                    self.dataSetId = dataSets.first?.uploadId
-                    self.display(dataSets, withTitle: "List Data Sets")
-                }
-                completion()
-            }
+        do {
+            let dataSets = try await api.listDataSets(filter: filter)
+            self.dataSetId = dataSets.first?.uploadId
+            self.display(dataSets, withTitle: "List Data Sets")
+        } catch {
+            self.present(UIAlertController(error: error), animated: true)
         }
     }
 
-    private func createDataSet(completion: @escaping () -> Void) {
+    private func createDataSet() async {
         let client = TDataSet.Client(name: Bundle.main.bundleIdentifier!, version: Bundle.main.semanticVersion!)
         let deduplicator = TDataSet.Deduplicator(name: .none)
         let dataSet = TDataSet(dataSetType: .continuous, client: client, deduplicator: deduplicator)
-        api.createDataSet(dataSet) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let error):
-                    self.present(UIAlertController(error: error), animated: true)
-                case .success(let dataSet):
-                    self.dataSetId = dataSet.uploadId
-                    self.display(dataSet, withTitle: "Create Data Set")
-                }
-                completion()
-            }
+        do {
+            let dataSet = try await api.createDataSet(dataSet)
+            self.dataSetId = dataSet.uploadId
+            self.display(dataSet, withTitle: "Create Data Set")
+        } catch {
+            self.present(UIAlertController(error: error), animated: true)
         }
     }
 
     // MARK: - Datum
 
-    private func listData(completion: @escaping () -> Void) {
+    private func listData() async {
         let filter = TDatum.Filter(dataSetId: dataSetId)
-        api.listData(filter: filter) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .failure(let error):
-                    self.present(UIAlertController(error: error), animated: true)
-                case .success((let data, let malformed)):
-                    if !malformed.isEmpty {
-                        self.present(UIAlertController(error: "Response contains malformed data.") {
-                            self.display(malformed, withTitle: "MALFORMED - List Data")
-                        }, animated: true)
-                    } else {
-                        self.display(data, withTitle: "List Data")
-                    }
-                }
-                completion()
+        do {
+            let (data, malformed) = try await api.listData(filter: filter)
+            if !malformed.isEmpty {
+                self.present(UIAlertController(error: "Response contains malformed data.") {
+                    self.display(malformed, withTitle: "MALFORMED - List Data")
+                }, animated: true)
+            } else {
+                self.display(data, withTitle: "List Data")
             }
+        } catch {
+            self.present(UIAlertController(error: error), animated: true)
         }
     }
 
-    private func createData(completion: @escaping () -> Void) {
+    private func createData() async {
         let data = Sample.Datum.data()
-        api.createData(data, dataSetId: dataSetId!) { error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    if case .requestMalformedJSON(_, _, let errors) = error {
-                        self.present(UIAlertController(error: "Response contains errors.") {
-                            self.display(errors, withTitle: "ERRORS - Create Data")
-                        }, animated: true)
-                    } else {
-                        self.present(UIAlertController(error: error), animated: true)
-                    }
+        do {
+            try await api.createData(data, dataSetId: dataSetId!)
+        } catch {
+            if let error = error as? TError {
+                if case .requestMalformedJSON(_, _, let errors) = error {
+                    self.present(UIAlertController(error: "Request contains errors.") {
+                        self.display(errors, withTitle: "ERRORS - Create Data")
+                    }, animated: true)
                 } else {
-                    self.datumSelectors = data.compactMap { $0.selector }
+                    self.present(UIAlertController(error: error), animated: true)
                 }
-                completion()
+            } else {
+                self.datumSelectors = data.compactMap { $0.selector }
             }
         }
     }
 
-    private func deleteData(completion: @escaping () -> Void) {
-        api.deleteData(withSelectors: datumSelectors!, dataSetId: dataSetId!) { error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    self.present(UIAlertController(error: error), animated: true)
-                } else {
-                    self.datumSelectors = nil
-                }
-                completion()
-            }
+    private func deleteData() async {
+        do {
+            try await api.deleteData(withSelectors: datumSelectors!, dataSetId: dataSetId!)
+            self.datumSelectors = nil
+        } catch {
+            self.present(UIAlertController(error: error), animated: true)
         }
     }
 
@@ -447,20 +431,5 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             return
         }
         show(TextViewController(text: text, withTitle: title), sender: self)
-    }
-}
-
-extension RootTableViewController: TLoginSignupDelegate {
-    func loginSignupDidComplete(completion: @escaping (Error?) -> Void) {
-        DispatchQueue.main.async {
-            self.dismiss(animated: true)
-            completion(nil)
-        }
-    }
-
-    func loginSignupCancelled() {
-        DispatchQueue.main.async {
-            self.dismiss(animated: true)
-        }
     }
 }

@@ -20,8 +20,8 @@ public struct TSession: Codable, Equatable {
     // The user id associated with the authentication token required by some API network requests.
     public let userId: String
 
-    // The email associated with this account, when the session was created
-    public let email: String
+    // The username associated with this account, when the session was created
+    public let username: String
 
     // The value of the optional X-Tidepool-Trace-Session header added to any future API network requests. The default UUID string
     // is usually sufficient, but can be changed or removed.
@@ -30,11 +30,11 @@ public struct TSession: Codable, Equatable {
     // The date the session was created
     public let createdDate: Date
     
-    public init(environment: TEnvironment, authenticationToken: String, userId: String, email: String, trace: String? = UUID().uuidString, createdDate: Date = Date()) {
+    public init(environment: TEnvironment, authenticationToken: String, userId: String, username: String, trace: String? = UUID().uuidString, createdDate: Date = Date()) {
         self.environment = environment
         self.authenticationToken = authenticationToken
         self.userId = userId
-        self.email = email
+        self.username = username
         self.trace = trace
         self.createdDate = createdDate
     }
@@ -46,6 +46,6 @@ public struct TSession: Codable, Equatable {
 
 extension TSession {
     public init(session: TSession, authenticationToken: String) {
-        self.init(environment: session.environment, authenticationToken: authenticationToken, userId: session.userId, email: session.email, trace: session.trace)
+        self.init(environment: session.environment, authenticationToken: authenticationToken, userId: session.userId, username: session.username, trace: session.trace)
     }
 }
