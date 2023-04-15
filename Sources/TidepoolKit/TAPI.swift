@@ -20,15 +20,15 @@ public protocol TAPIObserver: AnyObject {
 }
 
 /// The Tidepool API
-public class TAPI {
+public actor TAPI {
 
     /// All currently known environments. Will always include, as the first element, production. It will additionally include any
     /// environments discovered from the latest DNS SRV record lookup. When an instance of TAPI is created it will automatically
     /// perform a DNS SRV record lookup in the background. A client should generally only have one instance of TAPI.
-    public var environments: [TEnvironment] { environmentsLocked.value }
+    public var environments: [TEnvironment]
     
     /// The default environment is derived from the host app group. See UserDefaults extension.
-    public var defaultEnvironment: TEnvironment? {
+    nonisolated public var defaultEnvironment: TEnvironment? {
         get {
             UserDefaults.appGroup?.defaultEnvironment
         }
@@ -60,7 +60,11 @@ public class TAPI {
         }
     }
 
-    public weak var logging: TLogging?
+    public func setLogging(_ newLogging: TLogging) {
+        logging = newLogging
+    }
+
+    private weak var logging: TLogging?
 
     private var observers = WeakSynchronizedSet<TAPIObserver>()
 
@@ -80,12 +84,14 @@ public class TAPI {
     public init(clientId: String, redirectURL: URL, session: TSession? = nil, automaticallyFetchEnvironments: Bool = true) {
         self.clientId = clientId
         self.redirectURL = redirectURL
-        self.environmentsLocked = Locked(TAPI.implicitEnvironments)
+        self.environments = TAPI.implicitEnvironments
         self.urlSessionConfigurationLocked = Locked(TAPI.defaultURLSessionConfiguration)
         self.urlSessionLocked = Locked(nil)
         self.sessionLocked = Locked(session)
         if automaticallyFetchEnvironments {
-            fetchEnvironments()
+            Task {
+                await fetchEnvironments()
+            }
         }
     }
 
@@ -114,24 +120,69 @@ public class TAPI {
     /// - Parameters:
     ///   - completion: The completion function to invoke with the latest environments or any error.
     public func fetchEnvironments(completion: ((Result<[TEnvironment], TError>) -> Void)? = nil) {
-        Task {
-            DNS.lookupSRVRecords(for: TAPI.DNSSRVRecordsDomainName) { result in
-                switch result {
-                case .failure(let error):
-                    self.logging?.error("Failure during DNS SRV record lookup [\(error)]")
-                    completion?(.failure(.network(error)))
-                case .success(let records):
-                    var records = records + TAPI.DNSSRVRecordsImplicit
-                    records = records.map { record in
-                        if record.host != "localhost" {
-                            return record
-                        }
-                        return DNSSRVRecord(priority: UInt16.max, weight: record.weight, host: record.host, port: record.port)
+        DNS.lookupSRVRecords(for: TAPI.DNSSRVRecordsDomainName) { result in
+            switch result {
+            case .failure(let error):
+                self.logging?.error("Failure during DNS SRV record lookup [\(error)]")
+                completion?(.failure(.network(error)))
+            case .success(let records):
+                var records = records + TAPI.DNSSRVRecordsImplicit
+                records = records.map { record in
+                    if record.host != "localhost" {
+                        return record
                     }
-                    let environments = records.sorted().environments
-                    self.environmentsLocked.mutate { $0 = environments }
-                    self.logging?.debug("Successful DNS SRV record lookup")
-                    completion?(.success(environments))
+                    return DNSSRVRecord(priority: UInt16.max, weight: record.weight, host: record.host, port: record.port)
+                }
+                let environments = records.sorted().environments
+                self.environments = environments
+                self.logging?.debug("Successful DNS SRV record lookup")
+                completion?(.success(environments))
+            }
+        }
+    }
+
+    private func lookupOIDConfiguration(issuer: URL) async throws -> OIDServiceConfiguration {
+        // Lookup OpenID Service configuration for this environment, for various OpenID endpoints
+        let config: OIDServiceConfiguration = try await withCheckedThrowingContinuation { continuation in
+            OIDAuthorizationService.discoverConfiguration(forIssuer: issuer) { configuration, error in
+                guard error == nil else {
+                    continuation.resume(throwing: TError.network(error))
+                    return
+                }
+
+                guard let config = configuration else {
+                    continuation.resume(throwing: TError.missingAuthenticationConfiguration)
+                    return
+                }
+
+                continuation.resume(returning: config)
+            }
+        }
+        return config
+    }
+
+    private func presentAuth(request: OIDAuthorizationRequest, presenting: UIViewController) async throws -> (String, OIDExternalUserAgentSession) {
+        // Present the authentication session using AppAuth
+        return try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.main.async {
+                var f: OIDExternalUserAgentSession? = nil
+                f = OIDAuthState.authState(byPresenting: request, presenting: presenting) { authState, error in
+                    if let error = error {
+                        continuation.resume(throwing: TError.network(error))
+                        return
+                    }
+
+                    guard let authState else {
+                        continuation.resume(throwing: TError.missingAuthenticationState)
+                        return
+                    }
+
+                    guard let accessToken = authState.lastTokenResponse?.accessToken else {
+                        continuation.resume(throwing: TError.missingAuthenticationToken)
+                        return
+                    }
+
+                    continuation.resume(returning: (accessToken, f!))
                 }
             }
         }
@@ -155,24 +206,7 @@ public class TAPI {
             throw TError.missingAuthenticationIssuer
         }
 
-        // Lookup OpenID Service configuration for this environment, for various OpenID endpoints
-        let config: OIDServiceConfiguration = try await withCheckedThrowingContinuation { continuation in
-            OIDAuthorizationService.discoverConfiguration(forIssuer: issuer) { configuration, error in
-                guard error == nil else {
-                    self.logging?.error("Unable to discover authentication configuration: \(error!)")
-                    continuation.resume(throwing: TError.network(error))
-                    return
-                }
-
-                guard let config = configuration else {
-                    self.logging?.error("Error retrieving discovery document: No configuration")
-                    continuation.resume(throwing: TError.missingAuthenticationConfiguration)
-                    return
-                }
-
-                continuation.resume(returning: config)
-            }
-        }
+        let config = try await lookupOIDConfiguration(issuer: issuer)
 
         let request = OIDAuthorizationRequest(
             configuration: config,
@@ -184,30 +218,8 @@ public class TAPI {
             additionalParameters: [:]
         )
 
-        // Present the authentication session using AppAuth
-        let accessToken: String = try await withCheckedThrowingContinuation { continuation in
-            self.currentAuthorizationFlow = OIDAuthState.authState(byPresenting: request, presenting: presenting) { authState, error in
-                if let error = error {
-                    self.logging?.error("Authorization error: \(error)")
-                    continuation.resume(throwing: TError.network(error))
-                    return
-                }
-
-                guard let authState else {
-                    self.logging?.error("No authorization state")
-                    continuation.resume(throwing: TError.missingAuthenticationState)
-                    return
-                }
-
-                guard let accessToken = authState.lastTokenResponse?.accessToken else {
-                    self.logging?.error("No access token received")
-                    continuation.resume(throwing: TError.missingAuthenticationToken)
-                    return
-                }
-
-                continuation.resume(returning: accessToken)
-            }
-        }
+        let (accessToken, flow) = try await presentAuth(request: request, presenting: presenting)
+        self.currentAuthorizationFlow = flow
 
         self.logging?.debug("Authorization successful, access token: \(accessToken)")
 
@@ -230,20 +242,6 @@ public class TAPI {
     /// An .requestNotAuthenticated error indicates that the old session is no longer valid. All other errors
     /// indicate that the old session is still valid and refresh can be retried.
     ///
-    /// - Parameters:
-    ///   - completion: The completion function to invoke with any error.
-    @available(*, renamed: "refreshSession()")
-    public func refreshSession(completion: @escaping (TError?) -> Void) {
-        Task {
-            do {
-                try await refreshSession()
-                completion(nil)
-            } catch {
-                completion((error as! TError))
-            }
-        }
-    }
-
 
     public func refreshSession() async throws {
         guard let session = session else {
@@ -784,8 +782,6 @@ public class TAPI {
     private static var implicitEnvironments: [TEnvironment] {
         return DNSSRVRecordsImplicit.environments
     }
-
-    private var environmentsLocked: Locked<[TEnvironment]>
 
     private static let DNSSRVRecordsDomainName = "environments-srv.tidepool.org"
 

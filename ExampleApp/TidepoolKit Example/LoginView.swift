@@ -17,11 +17,25 @@ public struct LoginView: View {
     @State private var isEnvironmentActionSheetPresented = false
     @State private var message = ""
     @State private var isLoggingIn = false
+    @State private var selectedEnvironment: TEnvironment
 
-    var viewModel: LoginViewModel
+    var isLoggedIn: Bool
+    let environments: [TEnvironment]
+    let login: ((TEnvironment) async throws -> Void)?
+    let logout: (() -> Void)?
 
-    public init(viewModel: LoginViewModel) {
-        self.viewModel = viewModel
+    public init(
+        selectedEnvironment: TEnvironment,
+        isLoggedIn: Bool,
+        environments: [TEnvironment],
+        login: ((TEnvironment) async throws -> Void)?,
+        logout: (() -> Void)?)
+    {
+        self._selectedEnvironment = State(initialValue: selectedEnvironment)
+        self.isLoggedIn = isLoggedIn
+        self.environments = environments
+        self.login = login
+        self.logout = logout
     }
 
     public var body: some View {
@@ -42,8 +56,8 @@ public struct LoginView: View {
                             .padding(.bottom)
                         Text(NSLocalizedString("Environment", comment: "Label title for displaying selected Tidepool server environment."))
                             .bold()
-                        Text(viewModel.resolvedEnvironment.description)
-                        if viewModel.loggedIn {
+                        Text(selectedEnvironment.description)
+                        if isLoggedIn {
                             Text(NSLocalizedString("You are logged in.", comment: "LoginViewModel description text when logged in"))
                                 .padding()
                         } else {
@@ -56,7 +70,7 @@ public struct LoginView: View {
                         }
                         .padding()
                         Spacer()
-                        if viewModel.loggedIn {
+                        if isLoggedIn {
                             logoutButton
                         } else {
                             loginButton
@@ -81,16 +95,16 @@ public struct LoginView: View {
     }
 
     private var environmentActionSheet: ActionSheet {
-        var buttons: [ActionSheet.Button] = viewModel.environments.map { environment in
+        var buttons: [ActionSheet.Button] = environments.map { environment in
             .default(Text(environment.description)) {
-                viewModel.environment = environment
+                selectedEnvironment = environment
             }
         }
         buttons.append(.cancel())
 
         
         return ActionSheet(title: Text(NSLocalizedString("Environment", comment: "Tidepool login environment action sheet title")),
-                           message: Text(viewModel.resolvedEnvironment.description), buttons: buttons)
+                           message: Text(selectedEnvironment.description), buttons: buttons)
     }
 
     private var messageView: some View {
@@ -101,9 +115,7 @@ public struct LoginView: View {
 
     private var loginButton: some View {
         Button(action: {
-            Task {
-                await login()
-            }
+            loginButtonTapped()
         }) {
             if isLoggingIn {
                 ProgressView()
@@ -119,8 +131,10 @@ public struct LoginView: View {
 
     private var logoutButton: some View {
         Button(action: {
-            viewModel.logout()
-            dismiss()
+            Task {
+                logout?()
+                dismiss()
+            }
         }) {
             Text(NSLocalizedString("Logout", comment: "Tidepool logout button title"))
         }
@@ -128,18 +142,21 @@ public struct LoginView: View {
         .disabled(isLoggingIn)
     }
 
-    private func login() async {
+    private func loginButtonTapped() {
         guard !isLoggingIn else {
             return
         }
 
         isLoggingIn = true
-        do {
-            try await viewModel.login()
-            dismiss()
-        } catch {
-            setError(error)
-            isLoggingIn = false
+
+        Task {
+            do {
+                try await login?(selectedEnvironment)
+                dismiss()
+            } catch {
+                setError(error)
+                isLoggingIn = false
+            }
         }
     }
 
@@ -163,6 +180,11 @@ public struct LoginView: View {
 
 struct LoginView_Previews: PreviewProvider {
     static var previews: some View {
-        LoginView(viewModel: LoginViewModel(api: TAPI(clientId: "tidepool-loop", redirectURL: URL(string: "org.tidepool.Loop://tidepool_service_redirect")!)))
+        LoginView(
+            selectedEnvironment: TEnvironment(host: "api.tidepool.org", port: 8888),
+            isLoggedIn: false,
+            environments: [],
+            login: nil,
+            logout: nil)
     }
 }

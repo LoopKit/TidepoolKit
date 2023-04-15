@@ -14,6 +14,17 @@ import TidepoolKit
 
 class RootTableViewController: UITableViewController, TAPIObserver {
     private let api: TAPI
+    private var session: TSession? {
+        didSet {
+            UserDefaults.standard.session = session
+            if let session = session {
+                self.environment = session.environment
+            } else {
+                self.dataSetId = nil
+            }
+            updateViews()
+        }
+    }
     private var environment: TEnvironment? {
         didSet {
             UserDefaults.standard.environment = environment
@@ -44,18 +55,14 @@ class RootTableViewController: UITableViewController, TAPIObserver {
 
         super.init(coder: coder)
 
-        api.logging = logging
-        api.addObserver(self)
+        Task {
+            await api.setLogging(logging)
+            await api.addObserver(self)
+        }
     }
 
     func apiDidUpdateSession(_ session: TSession?) {
-        UserDefaults.standard.session = session
-        if let session = session {
-            self.environment = session.environment
-        } else {
-            self.dataSetId = nil
-        }
-        updateViews()
+        self.session = session
     }
 
     override func viewDidLoad() {
@@ -70,7 +77,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
 
     private func updateViews() {
         tableView.reloadData()
-        navigationItem.rightBarButtonItem?.isEnabled = api.session != nil
+        navigationItem.rightBarButtonItem?.isEnabled = session != nil
     }
 
     private struct SharedStatus: Codable, Equatable {
@@ -79,7 +86,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
     }
 
     @objc func share() {
-        guard let session = api.session,
+        guard let session = session,
             let data = try? JSONEncoder.pretty.encode(SharedStatus(session: session, dataSetId: dataSetId)),
             let text = String(data: data, encoding: .utf8) else
         {
@@ -164,8 +171,8 @@ class RootTableViewController: UITableViewController, TAPIObserver {
         case .status:
             let cell = tableView.dequeueReusableCell(withIdentifier: StatusTableViewCell.className, for: indexPath) as! StatusTableViewCell
             cell.environmentLabel?.text = environment?.description ?? defaultStatusLabelText
-            cell.authenticationTokenLabel?.text = api.session?.authenticationToken ?? defaultStatusLabelText
-            cell.userIdLabel?.text = api.session?.userId ?? defaultStatusLabelText
+            cell.authenticationTokenLabel?.text = session?.authenticationToken ?? defaultStatusLabelText
+            cell.userIdLabel?.text = session?.userId ?? defaultStatusLabelText
             cell.dataSetIdLabel?.text = dataSetId ?? defaultStatusLabelText
             return cell
         case .authentication:
@@ -174,16 +181,16 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             case .account:
                 cell.textLabel?.text = NSLocalizedString("Account", comment: "The text label of the account cell")
                 cell.accessoryType = .disclosureIndicator
-                cell.isEnabled = api.session == nil
+                cell.isEnabled = session == nil
             case .refresh:
                 cell.textLabel?.text = NSLocalizedString("Refresh", comment: "The text label of the authentication refresh cell")
-                cell.isEnabled = api.session != nil
+                cell.isEnabled = session != nil
             }
             return cell
         case .profile:
             let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath) as! TextButtonTableViewCell
             cell.accessoryType = .disclosureIndicator
-            cell.isEnabled = api.session != nil
+            cell.isEnabled = session != nil
             switch Profile(rawValue: indexPath.row)! {
             case .get:
                 cell.textLabel?.text = NSLocalizedString("Get Profile", comment: "The text label of the get profile cell")
@@ -192,7 +199,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
         case .dataSet:
             let cell = tableView.dequeueReusableCell(withIdentifier: TextButtonTableViewCell.className, for: indexPath) as! TextButtonTableViewCell
             cell.accessoryType = .disclosureIndicator
-            cell.isEnabled = api.session != nil
+            cell.isEnabled = session != nil
             switch DataSet(rawValue: indexPath.row)! {
             case .list:
                 cell.textLabel?.text = NSLocalizedString("List Data Sets", comment: "The text label of the list data sets cell")
@@ -206,13 +213,13 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             switch Datum(rawValue: indexPath.row)! {
             case .list:
                 cell.textLabel?.text = NSLocalizedString("List Data", comment: "The text label of the list data cell")
-                cell.isEnabled = api.session != nil
+                cell.isEnabled = session != nil
             case .create:
                 cell.textLabel?.text = NSLocalizedString("Create Data", comment: "The text label of the create data cell")
-                cell.isEnabled = api.session != nil && dataSetId != nil
+                cell.isEnabled = session != nil && dataSetId != nil
             case .delete:
                 cell.textLabel?.text = NSLocalizedString("Delete Data", comment: "The text label of the delete data cell")
-                cell.isEnabled = api.session != nil && dataSetId != nil && datumSelectors != nil
+                cell.isEnabled = session != nil && dataSetId != nil && datumSelectors != nil
             }
             return cell
         }
@@ -227,19 +234,19 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             case .account:
                 return true
             default:
-                return api.session != nil
+                return session != nil
             }
         case .datum:
             switch Datum(rawValue: indexPath.row)! {
             case .create:
-                return api.session != nil && dataSetId != nil
+                return session != nil && dataSetId != nil
             case .delete:
-                return api.session != nil && dataSetId != nil && datumSelectors != nil
+                return session != nil && dataSetId != nil && datumSelectors != nil
             default:
-                return api.session != nil
+                return session != nil
             }
         default:
-            return api.session != nil
+            return session != nil
         }
     }
 
@@ -249,12 +256,15 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             break
         case .authentication:
             let cell = tableView.cellForRow(at: indexPath) as! TextButtonTableViewCell
-            cell.isLoading = true
             switch Authentication(rawValue: indexPath.row)! {
             case .account:
-                login(completion: cell.stopLoading)
+                login()
             case .refresh:
-                refresh(completion: cell.stopLoading)
+                Task {
+                    cell.isLoading = true
+                    await refresh()
+                    cell.isLoading = true
+                }
             }
         case .profile:
             let cell = tableView.cellForRow(at: indexPath) as! TextButtonTableViewCell
@@ -294,32 +304,40 @@ class RootTableViewController: UITableViewController, TAPIObserver {
     }
 
     // MARK: - Authentication
-
-    private func login(completion: @escaping () -> Void) {
-        let viewModel = LoginViewModel(api: api)
-        let view = LoginView(viewModel: viewModel)
-        let loginViewController = UIHostingController(rootView: view)
-        viewModel.presentingViewController = loginViewController
-//        var loginSignupViewController = api.loginSignupViewController()
-//        loginSignupViewController.loginSignupDelegate = self
-//        loginSignupViewController.environment = environment
-        present(loginViewController, animated: true)
-        completion()
+    private var loginPresentingViewController: UIViewController {
+        return self.presentedViewController ?? self
     }
 
-    private func refresh(completion: @escaping () -> Void) {
-        api.refreshSession() { error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    self.present(UIAlertController(error: error), animated: true)
+    private func login() {
+        Task {
+            let environments = await self.api.environments
+            let currentEnvironment = self.session?.environment ?? self.api.defaultEnvironment ?? environments.first!
+            let view = LoginView(
+                selectedEnvironment: currentEnvironment,
+                isLoggedIn: session != nil,
+                environments: environments) { environment throws in
+                    try await self.api.login(environment: environment, presenting: self.loginPresentingViewController)
+                } logout: {
+                    Task {
+                        await self.api.logout()
+                    }
                 }
-                completion()
-            }
+
+            let loginViewController = UIHostingController(rootView: view)
+            present(loginViewController, animated: true)
         }
     }
 
-    private func logout(completion: @escaping () -> Void) {
-        api.logout()
+    private func refresh() async {
+        do {
+            try await api.refreshSession()
+        } catch {
+            self.present(UIAlertController(error: error), animated: true)
+        }
+    }
+
+    private func logout() async {
+        await api.logout()
     }
 
     // MARK: - Profile

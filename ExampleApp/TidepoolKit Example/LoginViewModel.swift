@@ -11,15 +11,15 @@ import TidepoolKit
 import UIKit
 
 enum LoginViewModelError: Error {
-    case configurationMissing
+    case missingPresentingViewController
 }
 
 extension LoginViewModelError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .configurationMissing:
-            return NSLocalizedString("View was not configured correctly.", comment: "Error description for LoginViewModelError.configurationMissing")
+        case .missingPresentingViewController:
+            return NSLocalizedString("LoginViewModel was not configured correctly with a presenting ViewController.", comment: "Error description for LoginViewModelError.missingPresentingViewController")
         }
     }
 }
@@ -27,33 +27,38 @@ extension LoginViewModelError: LocalizedError {
 @MainActor
 public class LoginViewModel: ObservableObject {
 
-    var loggedIn: Bool {
-        return api.session != nil
+    @Published var loggedIn: Bool = false
+    @Published var environments: [TEnvironment] = []
+    @Published var session: TSession?
+
+    var resolvedEnvironment: TEnvironment {
+        return selectedEnvironment ?? session?.environment ?? api.defaultEnvironment ?? environments.first!
     }
 
-    public var environment: TEnvironment?
-    public var presentingViewController: UIViewController?
+    var selectedEnvironment: TEnvironment?
+    var presentingViewController: UIViewController?
 
     private let api: TAPI
 
     public init(api: TAPI) {
         self.api = api
+        Task {
+            session = await api.session
+            loggedIn = session != nil
+            environments = await api.environments
+        }
     }
 
-    var environments: [TEnvironment] { api.environments }
-
-    var resolvedEnvironment: TEnvironment { environment ?? api.defaultEnvironment ?? environments.first! }
-
-    func logout() {
-        api.logout()
+    func logout() async {
+        await api.logout()
     }
 
     func login() async throws {
-        if let presentingViewController {
-            try await api.login(environment: resolvedEnvironment, presenting: presentingViewController)
+
+        guard let presentingViewController else {
+            throw LoginViewModelError.missingPresentingViewController
         }
-        else {
-            throw LoginViewModelError.configurationMissing
-        }
+
+        try await api.login(environment: resolvedEnvironment, presenting: presentingViewController)
     }
 }
