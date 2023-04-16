@@ -7,26 +7,31 @@
 //
 
 import XCTest
+import AppAuth
 @testable import TidepoolKit
+
 
 class TAPITests: XCTestCase {
     var api: TAPI!
     var environment: TEnvironment!
-    let authenticationToken = randomString
+    let accessToken = randomString
+    let refreshToken = randomString
     let userId = randomString
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
 
         URLProtocolMock.handlers = []
 
-        self.api = TAPI(automaticallyFetchEnvironments: false)
-        self.api.urlSessionConfiguration.protocolClasses = [URLProtocolMock.self]
+        self.api = TAPI(clientId: "test", redirectURL: URL(string: "org.tidepool.TidepoolKit://redirect")!, automaticallyFetchEnvironments: false)
+        let urlSessionConfiguration = await api.urlSessionConfiguration
+        urlSessionConfiguration.protocolClasses = [URLProtocolMock.self]
+        await self.api.setURLSessionConfiguration(urlSessionConfiguration)
         self.environment = TEnvironment(host: "test.org", port: 443)
     }
 
     override func tearDown() {
-        XCTAssertTrue(URLProtocolMock.handlers.isEmpty)
+        XCTAssertTrue(URLProtocolMock.handlers.isEmpty, "Unused handlers at end of test (first = \(URLProtocolMock.handlers[0]). Tests should use all configured handlers")
     }
 
     static var randomString: String { UUID().uuidString }
@@ -37,7 +42,11 @@ class TAPITests: XCTestCase {
         URLProtocolMock.handlers[0].error = TestError()
     }
 
-    func setUpRequestNotAuthenticated() {
+    func setUpRequestNotAuthenticated() async {
+        // Sets up the first api request to fail with a 401, and then returns a failure on the token refresh as well
+        let authorization = MockAuthorization()
+        authorization.refreshTokenError = MockAuthorization.tokenAccessDeniedError
+        await api.setAuthorization(authorization)
         URLProtocolMock.handlers[0].success?.statusCode = 401
     }
 
@@ -55,106 +64,27 @@ class TAPITests: XCTestCase {
 }
 
 class TAPIEnvironmentTests: TAPITests {
-    func testImplicitEnvironments() {
-        XCTAssertEqual(api.environments, [TEnvironment(host: "app.tidepool.org", port: 443)])
+    func testImplicitEnvironments() async {
+        let apiEnvironments = await api.environments
+        XCTAssertEqual(apiEnvironments, [TEnvironment(host: "app.tidepool.org", port: 443)])
     }
 }
 
 class TAPIURLSessionConfigurationTests: TAPITests {
-    func testDefaultURLSessionConfiguration() {
-        let urlSessionConfiguration = api.urlSessionConfiguration
+    func testDefaultURLSessionConfiguration() async {
+        let urlSessionConfiguration = await api.urlSessionConfiguration
         XCTAssertNotNil(urlSessionConfiguration.httpAdditionalHeaders)
         XCTAssertNotNil(urlSessionConfiguration.httpAdditionalHeaders?["User-Agent"])
         XCTAssertNotNil(urlSessionConfiguration.protocolClasses)
     }
 }
 
-class TAPILoginTests: TAPITests {
-    let email = randomString
-    let password = randomString
-
-    override func setUp() {
-        super.setUp()
-
-        URLProtocolMock.handlers = [URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/auth/login",
-                                                                                                 method: "POST",
-                                                                                                 headers: ["Authorization": "Basic \(Data("\(email):\(password)".utf8).base64EncodedString())"]),
-                                                            success: URLProtocolMock.Success(statusCode: 201,
-                                                                                             headers: ["X-Tidepool-Session-Token": authenticationToken],
-                                                                                             body: LoginResponse(userId: userId, email: email, emailVerified: true, termsAccepted: "2010-01-01T12:34:56Z")))]
-    }
-
-    func testNetworkError() {
-        setUpNetworkError()
-        guard let error = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard let error = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestEmailNotVerified() {
-        setUpRequestNotAuthorized()
-        guard let error = performRequest(), case .requestEmailNotVerified = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testResponseNotAuthenticated() {
-        setUpResponseNotAuthenticated()
-        guard let error = performRequest(), case .responseNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testResponseMalformedJSON() {
-        setUpResponseMalformedJSON()
-        guard let error = performRequest(), case .responseMalformedJSON = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testTermsOfUseNotAccepted() {
-        URLProtocolMock.handlers[0].success?.set(body: LoginResponse(userId: userId, email: email, emailVerified: true))
-        guard let error = performRequest(), case .requestTermsOfServiceNotAccepted = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccess() {
-        guard performRequest() == nil else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(api.session?.environment, environment)
-        XCTAssertEqual(api.session?.authenticationToken, authenticationToken)
-        XCTAssertEqual(api.session?.userId, userId)
-        XCTAssertNotNil(api.session?.trace)
-    }
-
-    private func performRequest() -> TError? {
-        let expectation = XCTestExpectationWithError()
-        api.login(environment: environment, email: email, password: password) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.error
-    }
-}
-
 class TAPIInfoTests: TAPITests {
 
-    static let info = TInfo(versions: TInfo.Versions(loop: TInfo.Versions.Loop(minimumSupported: "1.2.3", criticalUpdateNeeded: ["1.0.0", "1.1.0"])))
+    static let info = TInfo(
+        versions: TInfo.Versions(loop: TInfo.Versions.Loop(minimumSupported: "1.2.3", criticalUpdateNeeded: ["1.0.0", "1.1.0"])),
+        auth: TInfo.Auth(realm: "testrealm", url: "https://test.org/authurl")
+    )
     
     override func setUp() {
         super.setUp()
@@ -163,258 +93,379 @@ class TAPIInfoTests: TAPITests {
                                                             success: URLProtocolMock.Success(statusCode: 200, body: TAPIInfoTests.info))]
     }
 
-    func testNetworkError() {
+    func testNetworkError() async {
         setUpNetworkError()
-        guard case .failure(let error) = performRequest(environment), case .network(let networkError) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertNotNil(networkError)
-    }
 
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard case .failure(let error) = performRequest(environment), case .requestNotAuthenticated = error else {
+        do {
+            let _ = try await api.getInfo(environment: environment)
             XCTFail()
-            return
+        } catch {
+            guard case TError.network(let networkError) = error else {
+                XCTFail(String(describing: error))
+                return
+            }
+            XCTAssertNotNil(networkError)
         }
     }
 
-    func testRequestNotAuthorized() {
+    func testRequestNotAuthenticated() async {
+        await setUpRequestNotAuthenticated()
+
+        do {
+            let _ = try await api.getInfo(environment: environment)
+            XCTFail()
+        } catch {
+            guard case TError.requestNotAuthenticated = error else {
+                XCTFail()
+                return
+            }
+        }
+    }
+
+    func testRequestNotAuthorized() async {
         setUpRequestNotAuthorized()
-        guard case .failure(let error) = performRequest(environment), case .requestNotAuthorized = error else {
+
+        do {
+            let _ = try await api.getInfo(environment: environment)
             XCTFail()
-            return
+        } catch {
+            guard case TError.requestNotAuthorized = error else {
+                XCTFail()
+                return
+            }
         }
     }
 
-    func testResponseMalformedJSON() {
+    func testResponseMalformedJSON() async {
         setUpResponseMalformedJSON()
-        guard case .failure(let error) = performRequest(environment), case .responseMalformedJSON = error else {
+
+        do {
+            let _ = try await api.getInfo(environment: environment)
             XCTFail()
-            return
+        } catch {
+            guard case TError.responseMalformedJSON = error else {
+                XCTFail()
+                return
+            }
         }
     }
 
-    func testSuccess() {
-        guard case .success(let info) = performRequest(environment) else {
+    func testSuccess() async {
+        do {
+            let info = try await api.getInfo(environment: environment)
+            XCTAssertEqual(info, TAPIInfoTests.info)
+        } catch {
             XCTFail()
-            return
         }
-        XCTAssertEqual(info, TAPIInfoTests.info)
     }
 
-    func testSuccessUsingSessionEnvironment() {
+    func testSuccessUsingSessionEnvironment() async {
         let env = TEnvironment(host: "foo.bar.baz", port: 123)
-        let session = TSession(environment: env, authenticationToken: authenticationToken, userId: userId, email: "test@test.com")
-        api.session = session
+        let session = TSession(environment: env, accessToken: accessToken, accessTokenExpiration: nil, refreshToken: nil, userId: userId, username: "test@test.com")
+
+        await api.setSession(session)
+
         URLProtocolMock.handlers = [URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "http://foo.bar.baz:123/info", method: "GET"),
                                                             success: URLProtocolMock.Success(statusCode: 200, body: TAPIInfoTests.info))]
 
-        guard case .success(let info) = performRequest(nil) else {
+        do {
+            let info = try await api.getInfo(environment: env)
+            XCTAssertEqual(info, TAPIInfoTests.info)
+        } catch {
             XCTFail()
-            return
         }
-        XCTAssertEqual(info, TAPIInfoTests.info)
     }
     
-    private func performRequest(_ environment: TEnvironment?) -> Result<TInfo, TError>? {
-        let expectation = XCTestExpectationWithResult<TInfo, TError>()
-        api.getInfo(environment: environment) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
+}
+
+extension OIDServiceConfiguration {
+    static var mock: OIDServiceConfiguration {
+        return OIDServiceConfiguration(authorizationEndpoint: URL(string: "http://auth.bar.baz:123/auth")!, tokenEndpoint: URL(string: "http://auth.bar.baz:123/token")!)
     }
+}
+
+class MockAuthorization: Authorization {
+
+    static var tokenAccessDeniedError = NSError(domain: OIDOAuthTokenErrorDomain, code: -4)
+
+    var currentAuthorizationFlow: OIDExternalUserAgentSession?
+    var lastAuthRequest: OIDAuthorizationRequest?
+    var loginFailureError: Error?
+
+    var lastTokenRequest: OIDTokenRequest?
+    var refreshTokenError: Error?
+
+    var accessTokenExpirationDate: Date?
+
+    func getServiceConfiguration(issuer: URL) async throws -> OIDServiceConfiguration {
+        return OIDServiceConfiguration.mock
+    }
+
+    func presentAuth(request: OIDAuthorizationRequest, presenting: UIViewController) async throws -> AuthorizationState {
+        lastAuthRequest = request
+        if let loginFailureError {
+            throw loginFailureError
+        }
+        let authorizationResponse = MockAuthorizationResponse(
+            accessToken: "mockAccessToken",
+            accessTokenExpirationDate: accessTokenExpirationDate,
+            refreshToken: "mockRefreshToken")
+        return authorizationResponse
+    }
+
+    func requestToken(_ request: OIDTokenRequest) async throws -> AuthorizationState {
+        lastTokenRequest = request
+
+        if let refreshTokenError {
+            throw refreshTokenError
+        }
+
+        let authorizationResponse = MockAuthorizationResponse(
+            accessToken: "refreshedAccessToken",
+            accessTokenExpirationDate: accessTokenExpirationDate,
+            refreshToken: "refreshedRefreshToken")
+        return authorizationResponse
+
+    }
+}
+
+struct MockAuthorizationResponse: AuthorizationState {
+    var accessToken: String?
+
+    var accessTokenExpirationDate: Date?
+
+    var refreshToken: String?
 }
 
 class TAPISessionTests: TAPITests {
     var session: TSession!
     var headers: [String: String]!
-    var refreshAuthenticationToken = randomString
-    var refreshHandler: URLProtocolMock.Handler!
+    var authorization: MockAuthorization!
 
-    override func setUp() {
-        super.setUp()
+    static var mockUser: TUser {
+        return TUser(
+            emailVerified: true,
+            emails: ["name@email.org"],
+            roles: ["default-roles-integration", "patient"],
+            termsAccepted: Date(),
+            userid: "e631fc5a-1234-4686-a498-8f2bbfec55b6",
+            username: "name@email.org")
+    }
 
-        session = TSession(environment: environment, authenticationToken: authenticationToken, userId: userId, email: "test@test.com")
-        headers = ["X-Tidepool-Session-Token": authenticationToken, "X-Tidepool-Trace-Session": session.trace!]
-        refreshHandler = URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/auth/login", method: "GET", headers: headers),
-                                                 success: URLProtocolMock.Success(statusCode: 200, headers: ["X-Tidepool-Session-Token": refreshAuthenticationToken]))
+    let infoHandler = URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/info", method: "GET"), success: URLProtocolMock.Success(statusCode: 200, body: TAPIInfoTests.info))
+    let userHandler = URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/auth/user", method: "GET"), success: URLProtocolMock.Success(statusCode: 200, body: TAPILoginTests.mockUser))
 
-        api.session = session
+
+    override func setUp() async throws {
+        try await super.setUp()
+
+        session = TSession(environment: environment, accessToken: accessToken, accessTokenExpiration: nil, refreshToken: refreshToken, userId: userId, username: "test@test.com")
+        headers = ["X-Tidepool-Session-Token": accessToken, "X-Tidepool-Trace-Session": session.trace!]
+        await api.setSession(session)
+        authorization = MockAuthorization()
+        await api.setAuthorization(authorization)
+
     }
 }
 
-class TAPIRefreshTests: TAPISessionTests {
-    override func setUp() {
-        super.setUp()
+class TAPILoginTests: TAPISessionTests {
 
-        URLProtocolMock.handlers = [refreshHandler]
+    override func setUp() async throws {
+        try await super.setUp()
     }
 
-    func testNetworkError() {
+
+    func testSuccessfulLogin() async {
+        let mockUIViewController = await UIViewController()
+        do {
+            URLProtocolMock.handlers = [infoHandler, userHandler]
+
+            try await api.login(environment: session.environment, presenting: mockUIViewController)
+
+            XCTAssertEqual(authorization.lastAuthRequest?.clientID, "test")
+            XCTAssertEqual(authorization.lastAuthRequest?.redirectURL, URL(string: "org.tidepool.TidepoolKit://redirect"))
+            XCTAssertEqual(authorization.lastAuthRequest?.scope, "openid offline_access")
+
+            let session = await api.session
+            XCTAssertEqual(session?.accessToken, "mockAccessToken")
+            XCTAssertEqual(session?.accessTokenExpiration, nil)
+            XCTAssertEqual(session?.refreshToken, "mockRefreshToken")
+        } catch {
+            XCTFail(String(describing: error))
+        }
+    }
+
+    func testFailedLogin() async {
+        URLProtocolMock.handlers = [infoHandler]
+        let mockUIViewController = await UIViewController()
+        do {
+            authorization.loginFailureError = TError.missingAuthenticationState
+            await api.setSession(nil)
+
+            try await api.login(environment: session.environment, presenting: mockUIViewController)
+            XCTFail("Login should not succeed")
+        } catch {
+            let session = await api.session
+            XCTAssertNil(session)
+        }
+    }
+
+    func testSessionRefresh() async {
+        do {
+            URLProtocolMock.handlers = [infoHandler]
+            let newExpiration = Date().addingTimeInterval(12 * 60 * 60)
+            authorization.accessTokenExpirationDate = newExpiration
+            try await api.refreshSession()
+
+            let session = await api.session
+
+            XCTAssertEqual(authorization.lastTokenRequest?.clientID, "test")
+            XCTAssertEqual(authorization.lastTokenRequest?.redirectURL, nil)
+            XCTAssertEqual(authorization.lastTokenRequest?.scope, nil)
+
+            XCTAssertEqual(session?.accessToken, "refreshedAccessToken")
+            XCTAssertEqual(session?.accessTokenExpiration, newExpiration)
+            XCTAssertEqual(session?.refreshToken, "refreshedRefreshToken")
+        } catch {
+            XCTFail(String(describing: error))
+        }
+    }
+
+    func testRefreshTriggeredWhenPastExpiration() async {
+
+        let refreshedAccessToken = "refreshedAccessToken"
+
+        let headers = ["X-Tidepool-Session-Token": refreshedAccessToken, "X-Tidepool-Trace-Session": session.trace!]
+
+        URLProtocolMock.handlers = [
+            infoHandler,
+            URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/metadata/\(userId)/profile", method: "GET", headers: headers), success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: TProfileTests.profile))
+        ]
+
+        let expiredSession = TSession(
+            environment: session.environment,
+            accessToken: session.accessToken,
+            accessTokenExpiration: Date().addingTimeInterval(-30),
+            refreshToken: session.refreshToken,
+            userId: session.userId,
+            username: session.username,
+            trace: session.trace
+        )
+
+        await api.setSession(expiredSession)
+
+        // Make a profile request
+
+        do {
+            let profile = try await api.getProfile(userId: session.userId)
+
+            XCTAssertEqual(profile, TProfileTests.profile)
+
+            XCTAssertNotNil(authorization.lastTokenRequest)
+            let refreshedSession = await api.session
+            XCTAssertEqual(refreshedSession?.accessToken, refreshedAccessToken)
+
+        } catch {
+            XCTFail(String(describing: error))
+        }
+
+    }
+
+    func textRefreshTriggeredWhenAPIReturnsAuthenticationError() async {
+        // Should refresh on both 401 and 403, I think
+        XCTFail("TODO")
+    }
+
+}
+
+
+class TAPIGetProfileTests: TAPISessionTests {
+
+    var getProfileHandler: URLProtocolMock.Handler!
+
+    override func setUp() async throws {
+        try await super.setUp()
+
+        getProfileHandler = URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/metadata/\(userId)/profile", method: "GET", headers: headers), success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: TProfileTests.profile))
+    }
+
+    func testNetworkError() async {
+        URLProtocolMock.handlers = [getProfileHandler]
         setUpNetworkError()
-        guard let error = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertNotNil(networkError)
-    }
 
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard let error = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
+        do {
+            let _ = try await api.getProfile()
+            XCTFail("Request should have failed")
+        } catch {
+            guard case TError.network(let networkError) = error else {
+                XCTFail()
+                return
+            }
+            XCTAssertNotNil(networkError)
         }
     }
 
-    func testResponseNotAuthenticated() {
-        setUpResponseNotAuthenticated()
-        guard let error = performRequest(), case .responseNotAuthenticated = error else {
-            XCTFail()
-            return
+    func testRequestNotAuthenticated() async {
+        URLProtocolMock.handlers = [getProfileHandler, infoHandler]
+        await setUpRequestNotAuthenticated()
+
+        do {
+            let _ = try await api.getProfile()
+            XCTFail("Request should have failed")
+        } catch {
+            guard case TError.requestNotAuthenticated = error else {
+                XCTFail(String(describing: error))
+                return
+            }
         }
     }
 
-    func testSuccess() {
-        guard performRequest() == nil else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(api.session?.environment, session.environment)
-        XCTAssertEqual(api.session?.authenticationToken, refreshAuthenticationToken)
-        XCTAssertEqual(api.session?.userId, session.userId)
-        XCTAssertEqual(api.session?.trace, session.trace)
-    }
+    func testRequestNotAuthorized() async {
 
-    private func performRequest() -> TError? {
-        let expectation = XCTestExpectationWithError()
-        api.refreshSession() { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.error
-    }
-}
+        URLProtocolMock.handlers = [getProfileHandler]
 
-class TAPILogoutTests: TAPISessionTests {
-    override func setUp() {
-        super.setUp()
-
-        URLProtocolMock.handlers = [URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/auth/logout", method: "POST", headers: headers),
-                                                            success: URLProtocolMock.Success(statusCode: 200))]
-    }
-
-    func testNetworkError() {
-        setUpNetworkError()
-        guard let error = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard let error = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccess() {
-        guard performRequest() == nil else {
-            XCTFail()
-            return
-        }
-        XCTAssertNil(api.session)
-    }
-
-    private func performRequest() -> TError? {
-        let expectation = XCTestExpectationWithError()
-        api.logout() { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.error
-    }
-}
-
-class TAPIRefreshSessionTests: TAPISessionTests {
-    override func setUpRequestNotAuthenticated() {
-        super.setUpRequestNotAuthenticated()
-        URLProtocolMock.handlers.append(refreshHandler)
-        URLProtocolMock.handlers.append(URLProtocolMock.handlers[0])
-        URLProtocolMock.handlers[2].validator.headers = ["X-Tidepool-Session-Token": refreshAuthenticationToken, "X-Tidepool-Trace-Session": session.trace!]
-    }
-
-    func setUpSessionWantsRefresh() {
-        api.session = TSession(session: session, createdDate: Date().addingTimeInterval(-TSession.refreshInterval).addingTimeInterval(.seconds(-1)))
-
-        URLProtocolMock.handlers.insert(refreshHandler, at: 0)
-        URLProtocolMock.handlers[1].validator.headers = ["X-Tidepool-Session-Token": refreshAuthenticationToken, "X-Tidepool-Trace-Session": session.trace!]
-    }
-}
-
-class TAPIGetProfileTests: TAPIRefreshSessionTests {
-    override func setUp() {
-        super.setUp()
-
-        URLProtocolMock.handlers = [URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/metadata/\(userId)/profile", method: "GET", headers: headers),
-                                                            success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: TProfileTests.profile))]
-    }
-
-    func testNetworkError() {
-        setUpNetworkError()
-        guard case .failure(let error) = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestNotAuthorized() {
         setUpRequestNotAuthorized()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
+
+        do {
+            let _ = try await api.getProfile()
+            XCTFail("Request should have failed")
+        } catch {
+            guard case TError.requestNotAuthorized = error else {
+                XCTFail()
+                return
+            }
         }
     }
 
-    func testResponseMalformedJSON() {
+    func testResponseMalformedJSON() async {
+        URLProtocolMock.handlers = [getProfileHandler]
+
         setUpResponseMalformedJSON()
-        guard case .failure(let error) = performRequest(), case .responseMalformedJSON = error else {
-            XCTFail()
-            return
+
+        do {
+            let _ = try await api.getProfile()
+            XCTFail("Request should have failed")
+        } catch {
+            guard case TError.responseMalformedJSON = error else {
+                XCTFail()
+                return
+            }
         }
     }
 
-    func testSuccess() {
-        guard case .success(let profile) = performRequest() else {
-            XCTFail()
-            return
+    func testSuccess() async {
+        URLProtocolMock.handlers = [getProfileHandler]
+
+        do {
+            let profile = try await api.getProfile()
+            XCTAssertEqual(profile, TProfileTests.profile)
+        } catch {
+            XCTFail(String(describing: error))
         }
-        XCTAssertEqual(profile, TProfileTests.profile)
-    }
-
-    func testSuccessAfterRefresh() {
-        setUpSessionWantsRefresh()
-        testSuccess()
-    }
-
-    private func performRequest() -> Result<TProfile, TError>? {
-        let expectation = XCTestExpectationWithResult<TProfile, TError>()
-        api.getProfile() { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
     }
 }
 
-class TAPIClaimPrescriptionTests: TAPIRefreshSessionTests {
+class TAPIClaimPrescriptionTests: TAPISessionTests {
     var prescriptionClaim: TPrescriptionClaim!
 
     override func setUp() {
@@ -425,61 +476,17 @@ class TAPIClaimPrescriptionTests: TAPIRefreshSessionTests {
                                                             success: URLProtocolMock.Success(statusCode: 201, headers: headers, body: TPrescriptionTests.prescription))]
     }
 
-    func testNetworkError() {
-        setUpNetworkError()
-        guard case .failure(let error) = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
+    func testSuccess() async {
+        do {
+            let claimedPrescription = try await api.claimPrescription(prescriptionClaim: prescriptionClaim)
+            XCTAssertEqual(claimedPrescription, TPrescriptionTests.prescription)
+        } catch {
+            XCTFail(String(describing: error))
         }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestNotAuthorized() {
-        setUpRequestNotAuthorized()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testResponseMalformedJSON() {
-        setUpResponseMalformedJSON()
-        guard case .failure(let error) = performRequest(), case .responseMalformedJSON = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccess() {
-        guard case .success(let claimedPrescription) = performRequest() else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(claimedPrescription, TPrescriptionTests.prescription)
-    }
-
-    func testSuccessAfterRefresh() {
-        setUpSessionWantsRefresh()
-        testSuccess()
-    }
-
-    private func performRequest() -> Result<TPrescription, TError>? {
-        let expectation = XCTestExpectationWithResult<TPrescription, TError>()
-        api.claimPrescription(prescriptionClaim: prescriptionClaim) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
     }
 }
 
-class TAPIListDataSetsTests: TAPIRefreshSessionTests {
+class TAPIListDataSetsTests: TAPISessionTests {
     override func setUp() {
         super.setUp()
 
@@ -488,61 +495,17 @@ class TAPIListDataSetsTests: TAPIRefreshSessionTests {
                                                             success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: [TDataSetTests.dataSet]))]
     }
 
-    func testNetworkError() {
-        setUpNetworkError()
-        guard case .failure(let error) = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
+    func testSuccess() async {
+        do {
+            let dataSets = try await api.listDataSets(filter: TDataSetFilterTests.filter)
+            XCTAssertEqual(dataSets, [TDataSetTests.dataSet])
+        } catch {
+            XCTFail(String(describing: error))
         }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestNotAuthorized() {
-        setUpRequestNotAuthorized()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testResponseMalformedJSON() {
-        setUpResponseMalformedJSON()
-        guard case .failure(let error) = performRequest(), case .responseMalformedJSON = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccess() {
-        guard case .success(let dataSets) = performRequest() else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(dataSets, [TDataSetTests.dataSet])
-    }
-
-    func testSuccessAfterRefresh() {
-        setUpSessionWantsRefresh()
-        testSuccess()
-    }
-
-    private func performRequest() -> Result<[TDataSet], TError>? {
-        let expectation = XCTestExpectationWithResult<[TDataSet], TError>()
-        api.listDataSets(filter: TDataSetFilterTests.filter) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
     }
 }
 
-class TAPICreateDataSetTests: TAPIRefreshSessionTests {
+class TAPICreateDataSetTests: TAPISessionTests {
     var dataSet: TDataSet!
 
     override func setUp() {
@@ -553,61 +516,17 @@ class TAPICreateDataSetTests: TAPIRefreshSessionTests {
                                                             success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: LegacyResponse.Success(data: TDataSetTests.dataSet)))]
     }
 
-    func testNetworkError() {
-        setUpNetworkError()
-        guard case .failure(let error) = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
+    func testSuccess() async {
+        do {
+            let createdDataSet = try await api.createDataSet(dataSet)
+            XCTAssertEqual(createdDataSet, TDataSetTests.dataSet)
+        } catch {
+            XCTFail(String(describing: error))
         }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestNotAuthorized() {
-        setUpRequestNotAuthorized()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testResponseMalformedJSON() {
-        setUpResponseMalformedJSON()
-        guard case .failure(let error) = performRequest(), case .responseMalformedJSON = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccess() {
-        guard case .success(let createdDataSet) = performRequest() else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(createdDataSet, TDataSetTests.dataSet)
-    }
-
-    func testSuccessAfterRefresh() {
-        setUpSessionWantsRefresh()
-        testSuccess()
-    }
-
-    private func performRequest() -> Result<TDataSet, TError>? {
-        let expectation = XCTestExpectationWithResult<TDataSet, TError>()
-        api.createDataSet(dataSet) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
     }
 }
 
-class TAPIListDataTests: TAPIRefreshSessionTests {
+class TAPIListDataTests: TAPISessionTests {
     override func setUp() {
         super.setUp()
 
@@ -616,62 +535,18 @@ class TAPIListDataTests: TAPIRefreshSessionTests {
                                                             success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: [TCBGDatumTests.cbg, TFoodDatumTests.food]))]
     }
 
-    func testNetworkError() {
-        setUpNetworkError()
-        guard case .failure(let error) = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
+    func testSuccess() async {
+        do {
+            let (data, malformed) = try await api.listData(filter: TDatum.Filter(startDate: Date.test))
+            XCTAssertEqual(data, [TCBGDatumTests.cbg, TFoodDatumTests.food])
+            XCTAssertEqual(malformed.count, 0)
+        } catch {
+            XCTFail(String(describing: error))
         }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestNotAuthorized() {
-        setUpRequestNotAuthorized()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testResponseMalformedJSON() {
-        setUpResponseMalformedJSON()
-        guard case .failure(let error) = performRequest(), case .responseMalformedJSON = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccess() {
-        guard case .success((let data, let malformed)) = performRequest() else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(data, [TCBGDatumTests.cbg, TFoodDatumTests.food])
-        XCTAssertEqual(malformed.count, 0)
-    }
-
-    func testSuccessAfterRefresh() {
-        setUpSessionWantsRefresh()
-        testSuccess()
-    }
-
-    private func performRequest() -> Result<([TDatum], [String: [String: Any]]), TError>? {
-        let expectation = XCTestExpectationWithResult<([TDatum], [String: [String: Any]]), TError>()
-        api.listData(filter: TDatum.Filter(startDate: Date.test)) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
     }
 }
 
-class TAPICreateDataTests: TAPIRefreshSessionTests {
+class TAPICreateDataTests: TAPISessionTests {
     let dataSetId = randomString
     let data = [TCBGDatumTests.cbg, TFoodDatumTests.food]
 
@@ -682,72 +557,34 @@ class TAPICreateDataTests: TAPIRefreshSessionTests {
                                                             success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: LegacyResponse.Success<DataResponse>(data: DataResponse())))]
     }
 
-    func testNetworkError() {
-        setUpNetworkError()
-        guard let error = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard let error = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestNotAuthorized() {
-        setUpRequestNotAuthorized()
-        guard let error = performRequest(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestMalformedJSON() {
+    func testRequestMalformedJSON() async {
         let errors = [TError.Detail(code: "code-123", title: "title-123", detail: "detail-123"),
                       TError.Detail(code: "code-456", title: "title-456", detail: "detail-456"),
                       TError.Detail(code: "code-789", title: "title-789", detail: "detail-789")]
         URLProtocolMock.handlers[0].success = URLProtocolMock.Success(statusCode: 400, headers: headers, body: LegacyResponse.Failure(errors: errors))
-        guard let error = performRequest(), case .requestMalformedJSON(_, _, let malformedJSONErrors) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(malformedJSONErrors, errors)
-    }
 
-    func testResponseMalformedJSON() {
-        setUpResponseMalformedJSON()
-        guard let error = performRequest(), case .responseMalformedJSON = error else {
+        do {
+            try await api.createData(data, dataSetId: dataSetId)
             XCTFail()
-            return
+        } catch {
+            guard case TError.requestMalformedJSON(_, _, let malformedJSONErrors) = error else {
+                XCTFail()
+                return
+            }
+            XCTAssertEqual(malformedJSONErrors, errors)
         }
     }
 
-    func testSuccess() {
-        guard performRequest() == nil else {
-            XCTFail()
-            return
+    func testSuccess() async {
+        do {
+            try await api.createData(data, dataSetId: dataSetId)
+        } catch {
+            XCTFail(String(describing: error))
         }
-    }
-
-    func testSuccessAfterRefresh() {
-        setUpSessionWantsRefresh()
-        testSuccess()
-    }
-
-    private func performRequest() -> TError? {
-        let expectation = XCTestExpectationWithError()
-        api.createData(data, dataSetId: dataSetId) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.error
     }
 }
 
-class TAPIDeleteDataTests: TAPIRefreshSessionTests {
+class TAPIDeleteDataTests: TAPISessionTests {
     let dataSetId = randomString
     let selectors = [TDatum.Selector(id: randomString), TDatum.Selector(origin: TDatum.Selector.Origin(id: randomString))]
 
@@ -758,52 +595,16 @@ class TAPIDeleteDataTests: TAPIRefreshSessionTests {
                                                             success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: LegacyResponse.Success<DataResponse>(data: DataResponse())))]
     }
 
-    func testNetworkError() {
-        setUpNetworkError()
-        guard let error = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
+    func testSuccess() async {
+        do {
+            try await api.deleteData(withSelectors: selectors, dataSetId: dataSetId)
+        } catch {
+            XCTFail(String(describing: error))
         }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard let error = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestNotAuthorized() {
-        setUpRequestNotAuthorized()
-        guard let error = performRequest(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccess() {
-        guard performRequest() == nil else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccessAfterRefresh() {
-        setUpSessionWantsRefresh()
-        testSuccess()
-    }
-
-    private func performRequest() -> TError? {
-        let expectation = XCTestExpectationWithError()
-        api.deleteData(withSelectors: selectors, dataSetId: dataSetId) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.error
     }
 }
 
-class TAPIVerifyDeviceTests: TAPIRefreshSessionTests {
+class TAPIVerifyDeviceTests: TAPISessionTests {
     let deviceToken = randomString.data(using: .utf8)!
 
     override func setUp() {
@@ -814,215 +615,66 @@ class TAPIVerifyDeviceTests: TAPIRefreshSessionTests {
                                                             success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: TAPI.VerifyDeviceResponseBody(valid: true)))]
     }
 
-    func testNetworkError() {
-        setUpNetworkError()
-        guard case .failure(let error) = performRequest(), case .network(let networkError) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertNotNil(networkError)
-    }
-
-    func testRequestNotAuthenticated() {
-        setUpRequestNotAuthenticated()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
+    func testSuccess() async {
+        do {
+            let valid = try await api.verifyDevice(deviceToken: deviceToken)
+            XCTAssertTrue(valid)
+        } catch {
+            XCTFail(String(describing: error))
         }
     }
 
-    func testRequestNotAuthorized() {
-        setUpRequestNotAuthorized()
-        guard case .failure(let error) = performRequest(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testResponseMalformedJSON() {
-        setUpResponseMalformedJSON()
-        guard case .failure(let error) = performRequest(), case .responseMalformedJSON = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccess() {
-        guard case .success(let valid) = performRequest() else {
-            XCTFail()
-            return
-        }
-        XCTAssertTrue(valid)
-    }
-
-    func testSuccessInvalid() {
+    func testSuccessInvalid() async {
         URLProtocolMock.handlers[0].success = URLProtocolMock.Success(statusCode: 200, headers: headers, body: TAPI.VerifyDeviceResponseBody(valid: false))
-        guard case .success(let valid) = performRequest() else {
-            XCTFail()
-            return
+
+        do {
+            let valid = try await api.verifyDevice(deviceToken: deviceToken)
+            XCTAssertFalse(valid)
+        } catch {
+            XCTFail(String(describing: error))
         }
-        XCTAssertFalse(valid)
-    }
-
-    func testSuccessAfterRefresh() {
-        setUpSessionWantsRefresh()
-        testSuccess()
-    }
-
-    private func performRequest() -> Result<Bool, TError>? {
-        let expectation = XCTestExpectationWithResult<Bool, TError>()
-        api.verifyDevice(deviceToken: deviceToken) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
     }
 }
 
-class TAPIVerifyAppTests: TAPIRefreshSessionTests {
+class TAPIVerifyAppTests: TAPISessionTests {
     let challenge = randomString
     let attestationKeyID = randomString
     let attestationEncoded = randomString.data(using: .utf8)!.base64EncodedString()
     let assertionEncoded = randomString.data(using: .utf8)!.base64EncodedString()
 
-    private func addChallengeHandlerAttestation() {
+    func testSuccessChallengeAttestation() async throws {
         let challengeRequestBody = TAPI.VerifyAppChallengeRequestBody(keyId: attestationKeyID)
         URLProtocolMock.handlers.append(URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/v1/attestations/challenges", method: "POST", headers: headers, body: challengeRequestBody),
                                                                 success: URLProtocolMock.Success(statusCode: 201, headers: headers, body: TAPI.VerifyAppChallengeResponseBody(challenge: challenge))))
+
+        let challenge = try await api.getAttestationChallenge(keyID: attestationKeyID)
+        XCTAssertEqual(challenge, self.challenge)
     }
 
-    private func addChallengeHandlerAssertion() {
+    func testSuccessChallengeAssertion() async throws {
         let challengeRequestBody = TAPI.VerifyAppChallengeRequestBody(keyId: attestationKeyID)
         URLProtocolMock.handlers.append(URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/v1/assertions/challenges", method: "POST", headers: headers, body: challengeRequestBody),
                                                                 success: URLProtocolMock.Success(statusCode: 201, headers: headers, body: TAPI.VerifyAppChallengeResponseBody(challenge: challenge))))
+
+        let challenge = try await api.getAssertionChallenge(keyID: attestationKeyID)
+        XCTAssertEqual(challenge, self.challenge)
     }
 
-    private func addAttestationHandler() {
+    func testSuccessAttestation() async throws {
         let attestationRequestBody = TAPI.VerifyAppAttestationVerificationRequestBody(keyId: attestationKeyID, challenge: challenge, attestation: attestationEncoded)
         URLProtocolMock.handlers.append(URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/v1/attestations/verifications", method: "POST", headers: headers, body: attestationRequestBody),
                                                                 success: URLProtocolMock.Success(statusCode: 204, headers: headers)))
+
+        let valid = try await api.verifyAttestation(keyID: attestationKeyID, challenge: challenge, attestation: attestationEncoded)
+        XCTAssertTrue(valid)
     }
 
-    private func addAssertionHandler() {
+    func testSuccessAssertion() async throws {
         let assertionRequestBody = TAPI.VerifyAppAssertionVerificationRequestBody(keyId: attestationKeyID, challenge: challenge, assertion: assertionEncoded)
         URLProtocolMock.handlers.append(URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/v1/assertions/verifications", method: "POST", headers: headers, body: assertionRequestBody),
                                                                  success: URLProtocolMock.Success(statusCode: 204, headers: headers)))
-    }
 
-    func testNetworkError() {
-        addChallengeHandlerAttestation()
-        setUpNetworkError()
-        guard case .failure(let error) = performRequestChallengeAttestation(), case .network(let networkError) = error else {
-            XCTFail()
-            return
-        }
-        XCTAssertNotNil(networkError)
-        print("\(URLProtocolMock.handlers)")
-        URLProtocolMock.handlers.removeAll()
-    }
-
-    func testRequestNotAuthenticated() {
-        addAttestationHandler()
-        setUpRequestNotAuthenticated()
-        guard case .failure(let error) = performRequestAttestation(), case .requestNotAuthenticated = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testRequestNotAuthorized() {
-        addAssertionHandler()
-        setUpRequestNotAuthorized()
-        guard case .failure(let error) = performRequestAssertion(), case .requestNotAuthorized = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testResponseMalformedJSON() {
-        addChallengeHandlerAssertion()
-        setUpResponseMalformedJSON()
-        guard case .failure(let error) = performRequestChallengeAssertion(), case .responseMalformedJSON = error else {
-            XCTFail()
-            return
-        }
-    }
-
-    func testSuccessChallengeAttestation() {
-        addChallengeHandlerAttestation()
-        guard case .success(let challenge) = performRequestChallengeAttestation() else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(challenge, self.challenge)
-    }
-
-    func testSuccessChallengeAssertion() {
-        addChallengeHandlerAssertion()
-        guard case .success(let challenge) = performRequestChallengeAssertion() else {
-            XCTFail()
-            return
-        }
-        XCTAssertEqual(challenge, self.challenge)
-    }
-
-    func testSuccessAttestation() {
-        addAttestationHandler()
-        guard case .success(let valid) = performRequestAttestation() else {
-            XCTFail()
-            return
-        }
+        let valid = try await api.verifyAssertion(keyID: attestationKeyID, challenge: challenge, assertion: assertionEncoded)
         XCTAssertTrue(valid)
-    }
-
-    func testSuccessAssertion() {
-        addAssertionHandler()
-        guard case .success(let valid) = performRequestAssertion() else {
-            XCTFail()
-            return
-        }
-        XCTAssertTrue(valid)
-    }
-
-    func testSuccessAfterRefresh() {
-        addAssertionHandler()
-        setUpSessionWantsRefresh()
-        guard case .success(let valid) = performRequestAssertion() else {
-            XCTFail()
-            return
-        }
-        XCTAssertTrue(valid)
-    }
-
-    private func performRequestChallengeAttestation() -> Result<String, TError>? {
-        let expectation = XCTestExpectationWithResult<String, TError>()
-        api.getAttestationChallenge(keyID: attestationKeyID) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
-    }
-
-    private func performRequestChallengeAssertion() -> Result<String, TError>? {
-        let expectation = XCTestExpectationWithResult<String, TError>()
-        api.getAssertionChallenge(keyID: attestationKeyID) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
-    }
-
-    private func performRequestAttestation() -> Result<Bool, TError>? {
-        let expectation = XCTestExpectationWithResult<Bool, TError>()
-        api.verifyAttestation(keyID: attestationKeyID, challenge: challenge, attestation: attestationEncoded) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
-    }
-
-    private func performRequestAssertion() -> Result<Bool, TError>? {
-        let expectation = XCTestExpectationWithResult<Bool, TError>()
-        api.verifyAssertion(keyID: attestationKeyID, challenge: challenge, assertion: assertionEncoded) { expectation.fulfill($0) }
-        XCTAssertNotEqual(XCTWaiter.wait(for: [expectation], timeout: 10), .timedOut)
-        return expectation.result
-    }
-}
-
-fileprivate extension TSession {
-    init(session: TSession, createdDate: Date) {
-        self.init(environment: session.environment, authenticationToken: session.authenticationToken, userId: session.userId, email: "test@test.com", trace: session.trace, createdDate: createdDate)
     }
 }

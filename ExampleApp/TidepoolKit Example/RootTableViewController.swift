@@ -49,7 +49,8 @@ class RootTableViewController: UITableViewController, TAPIObserver {
     private let logging = Logging()
 
     required init?(coder: NSCoder) {
-        self.api = TAPI(clientId: "diy-loop", redirectURL:  URL(string: "org.loopkit.Loop://tidepool_service_redirect")!, session: UserDefaults.standard.session)
+        self.session = UserDefaults.standard.session
+        self.api = TAPI(clientId: "diy-loop", redirectURL:  URL(string: "org.loopkit.Loop://tidepool_service_redirect")!, session: session)
         self.environment = UserDefaults.standard.environment
         self.dataSetId = UserDefaults.standard.dataSetId
 
@@ -171,7 +172,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
         case .status:
             let cell = tableView.dequeueReusableCell(withIdentifier: StatusTableViewCell.className, for: indexPath) as! StatusTableViewCell
             cell.environmentLabel?.text = environment?.description ?? defaultStatusLabelText
-            cell.authenticationTokenLabel?.text = session?.authenticationToken ?? defaultStatusLabelText
+            cell.authenticationTokenLabel?.text = session?.accessToken ?? defaultStatusLabelText
             cell.userIdLabel?.text = session?.userId ?? defaultStatusLabelText
             cell.dataSetIdLabel?.text = dataSetId ?? defaultStatusLabelText
             return cell
@@ -263,7 +264,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
                 Task {
                     cell.isLoading = true
                     await refresh()
-                    cell.isLoading = true
+                    cell.stopLoading()
                 }
             }
         case .profile:

@@ -14,8 +14,14 @@ public struct TSession: Codable, Equatable {
     // The environment used for authentication and for any future API network requests.
     public let environment: TEnvironment
 
-    // The authentication token returned via authentication and for use with any future API network requests.
-    public let authenticationToken: String
+    // The access token returned via authentication and for use with any future API network requests.
+    public let accessToken: String
+
+    // Expiration date for the access token.
+    public let accessTokenExpiration: Date?
+
+    // The refresh token returned via authentication, used to refresh the access token.
+    public let refreshToken: String?
 
     // The user id associated with the authentication token required by some API network requests.
     public let userId: String
@@ -30,22 +36,21 @@ public struct TSession: Codable, Equatable {
     // The date the session was created
     public let createdDate: Date
     
-    public init(environment: TEnvironment, authenticationToken: String, userId: String, username: String, trace: String? = UUID().uuidString, createdDate: Date = Date()) {
+    public init(environment: TEnvironment, accessToken: String, accessTokenExpiration: Date?, refreshToken: String?, userId: String, username: String, trace: String? = UUID().uuidString, createdDate: Date = Date()) {
         self.environment = environment
-        self.authenticationToken = authenticationToken
+        self.accessToken = accessToken
+        self.accessTokenExpiration = accessTokenExpiration
+        self.refreshToken = refreshToken
         self.userId = userId
         self.username = username
         self.trace = trace
         self.createdDate = createdDate
     }
 
-    public var wantsRefresh: Bool { createdDate.addingTimeInterval(Self.refreshInterval) < Date() }
-
-    public static let refreshInterval: TimeInterval = .minutes(5)
-}
-
-extension TSession {
-    public init(session: TSession, authenticationToken: String) {
-        self.init(environment: session.environment, authenticationToken: authenticationToken, userId: session.userId, username: session.username, trace: session.trace)
+    public func shouldRefresh(after date: Date = Date()) -> Bool {
+        guard let accessTokenExpiration else {
+            return false
+        }
+        return date.timeIntervalSince(accessTokenExpiration) > 0
     }
 }

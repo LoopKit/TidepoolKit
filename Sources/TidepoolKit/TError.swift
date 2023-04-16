@@ -17,6 +17,9 @@ public enum TError: Error {
     /// The session is missing.
     case sessionMissing
 
+    /// Missing refresh token
+    case refreshTokenMissing
+
     /// Missing authentication issuer.
     case missingAuthenticationIssuer
 
@@ -41,7 +44,7 @@ public enum TError: Error {
     case requestMalformedJSON(HTTPURLResponse, Data, [Detail])
 
     /// The server responded that the request was not authenticated. Equivalent to HTTP status code 401.
-    case requestNotAuthenticated(HTTPURLResponse, Data?)
+    case requestNotAuthenticated
 
     /// The server responded that the request was authenticated, but not authorized. Equivalent to HTTP status code 403.
     case requestNotAuthorized(HTTPURLResponse, Data?)
@@ -98,6 +101,8 @@ extension TError: LocalizedError {
             return LocalizedString("A network error occurred.", comment: "The default localized description of the network error")
         case .sessionMissing:
             return LocalizedString("The session is missing.", comment: "The default localized description of the session missing error")
+        case .refreshTokenMissing:
+            return LocalizedString("The refreshToken is missing.", comment: "The default localized description of the refresh token missing error")
         case .missingAuthenticationIssuer:
             return LocalizedString("Missing authentication issuer.", comment: "The default localized description of the missingAuthenticationIssuer error")
         case .missingAuthenticationConfiguration:

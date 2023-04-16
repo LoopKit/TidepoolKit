@@ -82,6 +82,7 @@
 		A9C9D2512400CC4300D66F16 /* UIAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIAlertController.swift; sourceTree = "<group>"; };
 		A9C9D2532400CC6500D66F16 /* UserDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaults.swift; sourceTree = "<group>"; };
 		A9C9D2552400CD7A00D66F16 /* UTF8TextFileActivityItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UTF8TextFileActivityItem.swift; sourceTree = "<group>"; };
+		C14A9DCF29EB91B300881E31 /* AppAuth-iOS */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "AppAuth-iOS"; path = "../../../AppAuth-iOS"; sourceTree = "<group>"; };
 		C16A8D8C29AFC50500D79922 /* TidepoolKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = TidepoolKit; sourceTree = "<group>"; };
 		C185B9C629E854590039C101 /* TidepoolKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TidepoolKit; path = ..; sourceTree = "<group>"; };
 		C185B9C929E859610039C101 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
@@ -176,6 +177,7 @@
 		C16A8D8D29AFC53D00D79922 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				C14A9DCF29EB91B300881E31 /* AppAuth-iOS */,
 				C185B9C629E854590039C101 /* TidepoolKit */,
 			);
 			name = Packages;

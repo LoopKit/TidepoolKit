@@ -35,7 +35,12 @@ extension UserDefaults {
             guard let data = data(forKey: Key.session.rawValue) else {
                 return nil
             }
-            return try? JSONDecoder.tidepool.decode(TSession.self, from: data)
+            do {
+                return try JSONDecoder.tidepool.decode(TSession.self, from: data)
+            } catch {
+                print("Unable to decode session: \(error)")
+                return nil
+            }
         }
         set {
             set(try! JSONEncoder.tidepool.encode(newValue), forKey: Key.session.rawValue)

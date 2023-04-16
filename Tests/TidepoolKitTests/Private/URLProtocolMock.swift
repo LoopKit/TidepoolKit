@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import TidepoolKit
 import XCTest
 
 class URLProtocolMock: URLProtocol {
@@ -18,7 +19,9 @@ class URLProtocolMock: URLProtocol {
 
     override func startLoading() {
         guard !Self.handlers.isEmpty else {
-            XCTFail("Unexpected request")
+            XCTFail("Unexpected request: \(self.request.url!)")
+            client?.urlProtocol(self, didFailWithError: TError.requestInvalid)
+            client?.urlProtocolDidFinishLoading(self)
             return
         }
 
@@ -88,7 +91,7 @@ class URLProtocolMock: URLProtocol {
                 XCTAssertNotNil(request.allHTTPHeaderFields)
                 if let allHTTPHeaderFields = request.allHTTPHeaderFields {
                     for (key, value) in headers {
-                        XCTAssertEqual(allHTTPHeaderFields[key], value)
+                        XCTAssertEqual(allHTTPHeaderFields[key], value, "Header mismatch: key=\(key), \(allHTTPHeaderFields[key]) != \(value)")
                     }
                 }
             }

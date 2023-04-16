@@ -9,6 +9,7 @@
 import Foundation
 import AppAuth
 
+
 /// Observer of the Tidepool API
 public protocol TAPIObserver: AnyObject {
 
@@ -40,31 +41,33 @@ public actor TAPI {
     /// The URLSessionConfiguration used for all requests. The default is typically acceptable for most purposes. Any changes
     /// will only apply to subsequent requests.
     public var urlSessionConfiguration: URLSessionConfiguration {
-        get {
-            return urlSessionConfigurationLocked.value
+        didSet {
+            urlSession = URLSession(configuration: urlSessionConfiguration)
         }
-        set {
-            urlSessionConfigurationLocked.mutate { $0 = newValue }
-            urlSessionLocked.mutate { $0 = nil }
-        }
+    }
+
+    public func setURLSessionConfiguration(_ configuration: URLSessionConfiguration) {
+        urlSessionConfiguration = configuration
     }
 
     /// The session used for all requests.
     public var session: TSession? {
-        get {
-            return sessionLocked.value
-        }
-        set {
-            sessionLocked.mutate { $0 = newValue }
-            observers.forEach { $0.apiDidUpdateSession(newValue) }
+        didSet {
+            observers.forEach { $0.apiDidUpdateSession(self.session) }
         }
     }
+
+    public func setSession(_ session: TSession?) {
+        self.session = session
+    }
+
+
+    private weak var logging: TLogging?
 
     public func setLogging(_ newLogging: TLogging) {
         logging = newLogging
     }
 
-    private weak var logging: TLogging?
 
     private var observers = WeakSynchronizedSet<TAPIObserver>()
 
@@ -72,7 +75,10 @@ public actor TAPI {
 
     private var redirectURL: URL
 
-    private var currentAuthorizationFlow: OIDExternalUserAgentSession?
+    var authorization: Authorization
+    func setAuthorization(_ authorization: Authorization) {
+        self.authorization = authorization
+    }
 
     /// Create a new instance of TAPI. Automatically lookup additional environments in the background.
     ///
@@ -85,9 +91,9 @@ public actor TAPI {
         self.clientId = clientId
         self.redirectURL = redirectURL
         self.environments = TAPI.implicitEnvironments
-        self.urlSessionConfigurationLocked = Locked(TAPI.defaultURLSessionConfiguration)
-        self.urlSessionLocked = Locked(nil)
-        self.sessionLocked = Locked(session)
+        self.urlSessionConfiguration = TAPI.defaultURLSessionConfiguration
+        self.session = session
+        self.authorization = AppAuthAuthorization()
         if automaticallyFetchEnvironments {
             Task {
                 await fetchEnvironments()
@@ -141,51 +147,16 @@ public actor TAPI {
         }
     }
 
-    private func lookupOIDConfiguration(issuer: URL) async throws -> OIDServiceConfiguration {
-        // Lookup OpenID Service configuration for this environment, for various OpenID endpoints
-        let config: OIDServiceConfiguration = try await withCheckedThrowingContinuation { continuation in
-            OIDAuthorizationService.discoverConfiguration(forIssuer: issuer) { configuration, error in
-                guard error == nil else {
-                    continuation.resume(throwing: TError.network(error))
-                    return
-                }
+    private func lookupOIDConfiguration(environment: TEnvironment) async throws -> OIDServiceConfiguration {
 
-                guard let config = configuration else {
-                    continuation.resume(throwing: TError.missingAuthenticationConfiguration)
-                    return
-                }
+        // Lookup /info for current Tidepool environment, for issuer URL
+        let info = try await getInfo(environment: environment)
 
-                continuation.resume(returning: config)
-            }
+        guard let issuer = info.auth?.issuerURL else {
+            throw TError.missingAuthenticationIssuer
         }
-        return config
-    }
 
-    private func presentAuth(request: OIDAuthorizationRequest, presenting: UIViewController) async throws -> (String, OIDExternalUserAgentSession) {
-        // Present the authentication session using AppAuth
-        return try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.main.async {
-                var f: OIDExternalUserAgentSession? = nil
-                f = OIDAuthState.authState(byPresenting: request, presenting: presenting) { authState, error in
-                    if let error = error {
-                        continuation.resume(throwing: TError.network(error))
-                        return
-                    }
-
-                    guard let authState else {
-                        continuation.resume(throwing: TError.missingAuthenticationState)
-                        return
-                    }
-
-                    guard let accessToken = authState.lastTokenResponse?.accessToken else {
-                        continuation.resume(throwing: TError.missingAuthenticationToken)
-                        return
-                    }
-
-                    continuation.resume(returning: (accessToken, f!))
-                }
-            }
-        }
+        return try await authorization.getServiceConfiguration(issuer: issuer)
     }
 
     // MARK: - Authentication
@@ -199,14 +170,7 @@ public actor TAPI {
     ///   - completion: The completion function to invoke with any error.
     public func login(environment: TEnvironment, presenting: UIViewController) async throws {
 
-        // Lookup /info for current Tidepool environment, for issuer URL
-        let info = try await getInfo(environment: environment)
-
-        guard let issuer = info.auth?.issuerURL else {
-            throw TError.missingAuthenticationIssuer
-        }
-
-        let config = try await lookupOIDConfiguration(issuer: issuer)
+        let config = try await lookupOIDConfiguration(environment: environment)
 
         let request = OIDAuthorizationRequest(
             configuration: config,
@@ -218,8 +182,12 @@ public actor TAPI {
             additionalParameters: [:]
         )
 
-        let (accessToken, flow) = try await presentAuth(request: request, presenting: presenting)
-        self.currentAuthorizationFlow = flow
+        let authState = try await authorization.presentAuth(request: request, presenting: presenting)
+
+        guard let accessToken = authState.accessToken else
+        {
+            throw TError.missingAuthenticationToken
+        }
 
         self.logging?.debug("Authorization successful, access token: \(accessToken)")
 
@@ -229,7 +197,13 @@ public actor TAPI {
 
         let currentUser: TUser = try await performRequest(userRequest, allowSessionRefresh: true)
 
-        self.session = TSession(environment: environment, authenticationToken: accessToken, userId: currentUser.userid, username: currentUser.username)
+        self.session = TSession(
+            environment: environment,
+            accessToken: accessToken,
+            accessTokenExpiration: authState.accessTokenExpirationDate,
+            refreshToken: authState.refreshToken,
+            userId: currentUser.userid,
+            username: currentUser.username)
     }
 
     private func basicAuthorizationFromCredentials(email: String, password: String) -> String {
@@ -244,26 +218,41 @@ public actor TAPI {
     ///
 
     public func refreshSession() async throws {
-        guard let session = session else {
+        guard let session else {
             throw TError.sessionMissing
         }
 
-        let request = try createRequest(method: "GET", path: "/auth/login")
-        do {
-            let (response, data) = try await performRequest(request, allowSessionRefresh: false)
-            if let authenticationToken = response.value(forHTTPHeaderField: "X-Tidepool-Session-Token"), !authenticationToken.isEmpty {
-                self.session = TSession(session: session, authenticationToken: authenticationToken)
-                return
-            } else {
-                throw TError.responseNotAuthenticated(response, data)
-            }
-        } catch {
-            if case TError.requestNotAuthenticated = error {
-                self.logging?.error("Authentication failed during session refresh request \(String(describing: request)), \(error)")
-                self.session = nil
-            }
-            throw error
+        guard let refreshToken = session.refreshToken else {
+            throw TError.refreshTokenMissing
         }
+
+        let config = try await lookupOIDConfiguration(environment: session.environment)
+
+        let request = OIDTokenRequest(
+            configuration: config,
+            grantType: OIDGrantTypeRefreshToken,
+            authorizationCode: nil,
+            redirectURL: nil,
+            clientID: self.clientId,
+            clientSecret: nil,
+            scope: nil,
+            refreshToken: refreshToken,
+            codeVerifier: nil,
+            additionalParameters: nil)
+
+
+        let tokenResponse = try await authorization.requestToken(request)
+
+        if let newAccessToken = tokenResponse.accessToken {
+            self.session = TSession(
+                environment: session.environment,
+                accessToken: newAccessToken,
+                accessTokenExpiration: tokenResponse.accessTokenExpirationDate,
+                refreshToken: tokenResponse.refreshToken,
+                userId: session.userId,
+                username: session.username)
+        }
+        
     }
 
     /// Logout the Tidepool API session.
@@ -568,7 +557,7 @@ public actor TAPI {
         }
 
         var request = try createRequest(environment: session.environment, method: method, path: path, queryItems: queryItems)
-        request.setValue(session.authenticationToken, forHTTPHeaderField: HTTPHeaderField.tidepoolSessionToken.rawValue)
+        request.setValue(session.accessToken, forHTTPHeaderField: HTTPHeaderField.tidepoolSessionToken.rawValue)
         if let trace = session.trace {
             request.setValue(trace, forHTTPHeaderField: HTTPHeaderField.tidepoolTraceSession.rawValue)
         }
@@ -586,37 +575,12 @@ public actor TAPI {
 
     private typealias DecodableResult<D> = Result<D, TError> where D: Decodable
 
-    @available(*, renamed: "performRequest(_:allowSessionRefresh:)")
-    private func performRequest<D>(_ request: URLRequest?, allowSessionRefresh: Bool = true, completion: @escaping (DecodableResult<D>) -> Void) where D: Decodable {
-        Task {
-            do {
-                let result: D = try await performRequest(request, allowSessionRefresh: allowSessionRefresh)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error as! TError))
-            }
-        }
-    }
-
     private func performRequest<D>(_ request: URLRequest?, allowSessionRefresh: Bool = true) async throws -> D where D: Decodable {
         let (_, _, decoded): (HTTPURLResponse, Data?, D) = try await performRequest(request, allowSessionRefresh: allowSessionRefresh)
         return decoded
     }
 
     private typealias DecodableHTTPResult<D> = Result<(HTTPURLResponse, Data, D), TError> where D: Decodable
-
-    @available(*, renamed: "performRequest(_:allowSessionRefresh:)")
-    private func performRequest<D>(_ request: URLRequest?, allowSessionRefresh: Bool = true, completion: @escaping (DecodableHTTPResult<D>) -> Void) where D: Decodable {
-        Task {
-            do {
-                let result: (HTTPURLResponse, Data, D) = try await performRequest(request, allowSessionRefresh: allowSessionRefresh)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error as! TError))
-            }
-        }
-    }
-
 
     private func performRequest<D>(_ request: URLRequest?, allowSessionRefresh: Bool = true) async throws -> (HTTPURLResponse, Data, D) where D: Decodable {
         let (response, data) = try await performRequest(request, allowSessionRefresh: allowSessionRefresh)
@@ -644,21 +608,8 @@ public actor TAPI {
 
     private typealias HTTPResult = Result<(HTTPURLResponse, Data?), TError>
 
-    @available(*, renamed: "performRequest(_:allowSessionRefresh:)")
-    private func performRequest(_ request: URLRequest?, allowSessionRefresh: Bool = true, completion: @escaping (HTTPResult) -> Void) {
-        Task {
-            do {
-                let result = try await performRequest(request, allowSessionRefresh: allowSessionRefresh)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error as! TError))
-            }
-        }
-    }
-
-
     private func performRequest(_ request: URLRequest?, allowSessionRefresh: Bool = true) async throws -> (HTTPURLResponse, Data?) {
-        if allowSessionRefresh, let session = session, session.wantsRefresh {
+        if allowSessionRefresh, let session = session, session.shouldRefresh() {
             return try await refreshSessionAndPerformRequest(request)
         } else {
             return try await performRequest(request, allowSessionRefreshAfterFailure: allowSessionRefresh)
@@ -666,23 +617,10 @@ public actor TAPI {
     }
 
     private func performRequestNotDecodingResponse(_ request: URLRequest?, allowSessionRefresh: Bool = true) async throws {
-        if allowSessionRefresh, let session = session, session.wantsRefresh {
+        if allowSessionRefresh, let session = session, session.shouldRefresh() {
             let _ = try await refreshSessionAndPerformRequest(request)
         } else {
             let _ = try await performRequest(request, allowSessionRefreshAfterFailure: allowSessionRefresh)
-        }
-    }
-
-
-    @available(*, renamed: "performRequest(_:allowSessionRefreshAfterFailure:)")
-    private func performRequest(_ request: URLRequest?, allowSessionRefreshAfterFailure: Bool, completion: @escaping (HTTPResult) -> Void) {
-        Task {
-            do {
-                let result = try await self.performRequest(request, allowSessionRefreshAfterFailure: allowSessionRefreshAfterFailure)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error as! TError))
-            }
         }
     }
 
@@ -697,7 +635,12 @@ public actor TAPI {
             logging?.debug("Body: \(bodyStr)")
         }
 
-        let (data, response) = try await urlSession.data(for: request)
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await urlSession.data(for: request)
+        } catch {
+            throw TError.network(error)
+        }
 
         if let response = response as? HTTPURLResponse {
             if allowSessionRefreshAfterFailure, response.statusCode == 401 {
@@ -715,7 +658,7 @@ public actor TAPI {
                 case 400:
                     throw TError.requestMalformed(response, data)
                 case 401:
-                    throw TError.requestNotAuthenticated(response, data)
+                    throw TError.requestNotAuthenticated
                 case 403:
                     throw TError.requestNotAuthorized(response, data)
                 case 404:
@@ -729,25 +672,25 @@ public actor TAPI {
         }
     }
 
-    @available(*, renamed: "refreshSessionAndPerformRequest(_:)")
-    private func refreshSessionAndPerformRequest(_ request: URLRequest?, completion: @escaping (HTTPResult) -> Void) {
-        Task {
-            do {
-                let result = try await refreshSessionAndPerformRequest(request)
-                completion(.success(result))
-            } catch {
-                completion(.failure(error as! TError))
-            }
-        }
-    }
-
     private func refreshSessionAndPerformRequest(_ request: URLRequest?) async throws -> (HTTPURLResponse, Data?) {
-        try await refreshSession()
+        do {
+            try await refreshSession()
+        } catch {
+            let tokenError = error as NSError
+            if tokenError.domain == OIDOAuthTokenErrorDomain {
+                let errorCode = tokenError.userInfo[OIDOAuthErrorResponseErrorKey] ?? "unknown";
+                logging?.error("Auth error while refreshing token: \(errorCode) \(error.localizedDescription)")
+                self.session = nil
+            } else {
+                logging?.error("Error refreshing token: \(error.localizedDescription)")
+            }
+            throw TError.requestNotAuthenticated
+        }
         guard let session = self.session else {
             throw TError.sessionMissing
         }
         var request1 = request
-        request1?.setValue(session.authenticationToken, forHTTPHeaderField: HTTPHeaderField.tidepoolSessionToken.rawValue)
+        request1?.setValue(session.accessToken, forHTTPHeaderField: HTTPHeaderField.tidepoolSessionToken.rawValue)
         return try await self.performRequest(request1, allowSessionRefreshAfterFailure: false)
     }
 
@@ -764,20 +707,7 @@ public actor TAPI {
         return urlSessionConfiguration
     }
 
-    private var urlSessionConfigurationLocked: Locked<URLSessionConfiguration>
-
-    private var urlSession: URLSession! {
-        let urlSessionConfiguration = urlSessionConfigurationLocked.value
-        return urlSessionLocked.mutate { urlSession in
-            if urlSession == nil {
-                urlSession = URLSession(configuration: urlSessionConfiguration)
-            }
-        }
-    }
-
-    private var urlSessionLocked: Locked<URLSession?>
-
-    private var sessionLocked: Locked<TSession?>
+    private var urlSession: URLSession = URLSession(configuration: defaultURLSessionConfiguration)
 
     private static var implicitEnvironments: [TEnvironment] {
         return DNSSRVRecordsImplicit.environments

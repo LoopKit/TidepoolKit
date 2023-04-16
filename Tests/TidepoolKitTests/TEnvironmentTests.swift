@@ -22,41 +22,35 @@ class TEnvironmentTests: XCTestCase {
         XCTAssertEqual(environment.port, 443)
     }
 
-    func testURLWithPort80() {
-        let url = TEnvironment(host: "test.tidepool.org", port: 80).url()
-        XCTAssertNotNil(url)
-        XCTAssertEqual(url!.absoluteString, "http://test.tidepool.org/")
+    func testURLWithPort80() throws {
+        let url = try TEnvironment(host: "test.tidepool.org", port: 80).url()
+        XCTAssertEqual(url.absoluteString, "http://test.tidepool.org/")
     }
 
-    func testURLWithPort443() {
-        let url = TEnvironment(host: "test.tidepool.org", port: 443).url()
-        XCTAssertNotNil(url)
-        XCTAssertEqual(url!.absoluteString, "https://test.tidepool.org/")
+    func testURLWithPort443() throws {
+        let url = try TEnvironment(host: "test.tidepool.org", port: 443).url()
+        XCTAssertEqual(url.absoluteString, "https://test.tidepool.org/")
     }
 
-    func testURLWithPortOther() {
-        let url = TEnvironment(host: "test.tidepool.org", port: 3000).url()
-        XCTAssertNotNil(url)
-        XCTAssertEqual(url!.absoluteString, "http://test.tidepool.org:3000/")
+    func testURLWithPortOther() throws {
+        let url = try TEnvironment(host: "test.tidepool.org", port: 3000).url()
+        XCTAssertEqual(url.absoluteString, "http://test.tidepool.org:3000/")
     }
 
-    func testURLWithPathWithoutPrefix() {
-        let url = TEnvironmentTests.environment.url(path: "alpha/beta")
-        XCTAssertNotNil(url)
-        XCTAssertEqual(url!.absoluteString, "https://test.tidepool.org/alpha/beta")
+    func testURLWithPathWithoutPrefix() throws {
+        let url = try TEnvironmentTests.environment.url(path: "alpha/beta")
+        XCTAssertEqual(url.absoluteString, "https://test.tidepool.org/alpha/beta")
     }
 
-    func testURLWithPathWithPrefix() {
-        let url = TEnvironmentTests.environment.url(path: "/alpha/beta")
-        XCTAssertNotNil(url)
-        XCTAssertEqual(url!.absoluteString, "https://test.tidepool.org/alpha/beta")
+    func testURLWithPathWithPrefix() throws {
+        let url = try TEnvironmentTests.environment.url(path: "/alpha/beta")
+        XCTAssertEqual(url.absoluteString, "https://test.tidepool.org/alpha/beta")
     }
 
-    func testURLWithQueryItems() {
+    func testURLWithQueryItems() throws {
         let queryItems = [URLQueryItem(name: "foo", value: "one"), URLQueryItem(name: "bar", value: "two")]
-        let url = TEnvironmentTests.environment.url(path: "/alpha/beta", queryItems: queryItems)
-        XCTAssertNotNil(url)
-        XCTAssertEqual(url!.absoluteString, "https://test.tidepool.org/alpha/beta?foo=one&bar=two")
+        let url = try TEnvironmentTests.environment.url(path: "/alpha/beta", queryItems: queryItems)
+        XCTAssertEqual(url.absoluteString, "https://test.tidepool.org/alpha/beta?foo=one&bar=two")
     }
 
     func testDescription() {
