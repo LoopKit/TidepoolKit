@@ -595,17 +595,6 @@ public actor TAPI {
         }
     }
 
-    private func performRequest(_ request: URLRequest?, allowSessionRefresh: Bool = true, completion: @escaping (TError?) -> Void) {
-        performRequest(request, allowSessionRefresh: allowSessionRefresh) { (result: HTTPResult) -> Void in
-            switch result {
-            case .failure(let error):
-                completion(error)
-            case .success:
-                completion(nil)
-            }
-        }
-    }
-
     private typealias HTTPResult = Result<(HTTPURLResponse, Data?), TError>
 
     private func performRequest(_ request: URLRequest?, allowSessionRefresh: Bool = true) async throws -> (HTTPURLResponse, Data?) {
