@@ -111,7 +111,7 @@ class TDataSetClientTests: XCTestCase {
     static let clientJSONDictionary: [String: Any] = [
         "name": "org.tidepool.Example",
         "version": "1.2.3",
-        "private": ["a": "b", "c": 0]
+        "private": ["a": "b", "c": 0] as [String : Any]
     ]
     
     func testInitializer() {

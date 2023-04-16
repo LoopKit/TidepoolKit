@@ -30,7 +30,7 @@ class TDatumTests: XCTestCase {
     static let datumJSONDictionary: [String: Any] = [
         "type": "water",
         "time": Date.testJSONString,
-        "annotations": [["a": "b", "c": 0], ["alpha": "bravo"]],
+        "annotations": [["a": "b", "c": 0] as [String : Any], ["alpha": "bravo"]],
         "associations": [TAssociationTests.assocationJSONDictionary, TAssociationTests.assocationJSONDictionary],
         "clockDriftOffset": 1234,
         "conversionOffset": 2345,

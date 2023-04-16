@@ -22,7 +22,7 @@ class TStatusDeviceEventDatumTests: XCTestCase {
         "status": "suspended",
         "duration": 123456,
         "expectedDuration": 234567,
-        "reason": ["One": 2, "a": "b"]
+        "reason": ["One": 2, "a": "b"] as [String : Any]
     ]
     
     func testInitializer() {

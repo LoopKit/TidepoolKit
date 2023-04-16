@@ -22,7 +22,7 @@ class TOriginTests: XCTestCase {
         "version": "1.2.3",
         "type": "device",
         "time": Date.testJSONString,
-        "payload": ["a": "b", "c": 0]
+        "payload": ["a": "b", "c": 0] as [String : Any]
     ]
     
     func testInitializer() {

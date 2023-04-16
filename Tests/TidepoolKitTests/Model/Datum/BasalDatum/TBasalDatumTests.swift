@@ -44,7 +44,7 @@ class TBasalDatumSuppressedBasalTests: XCTestCase {
         "type": "basal",
         "deliveryType": "scheduled",
         "insulinFormulation": TInsulinDatumFormulationTests.formulationJSONDictionary,
-        "annotations": [["a": "b", "c": 0], ["alpha": "bravo"]]
+        "annotations": [["a": "b", "c": 0] as [String : Any], ["alpha": "bravo"]]
     ]
     
     func testInitializer() {

@@ -16,7 +16,7 @@ class TInfoTests: XCTestCase {
             "loop": [
                 "minimumSupported": "1.2.0",
                 "criticalUpdateNeeded": [ "1.1.0" ]
-            ]
+            ] as [String : Any]
         ]
     ]
     

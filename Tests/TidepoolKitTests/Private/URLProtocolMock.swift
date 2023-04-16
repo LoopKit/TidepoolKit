@@ -91,7 +91,7 @@ class URLProtocolMock: URLProtocol {
                 XCTAssertNotNil(request.allHTTPHeaderFields)
                 if let allHTTPHeaderFields = request.allHTTPHeaderFields {
                     for (key, value) in headers {
-                        XCTAssertEqual(allHTTPHeaderFields[key], value, "Header mismatch: key=\(key), \(allHTTPHeaderFields[key]) != \(value)")
+                        XCTAssertEqual(allHTTPHeaderFields[key], value, "Header mismatch: key=\(key), \(String(describing: allHTTPHeaderFields[key])) != \(value)")
                     }
                 }
             }
