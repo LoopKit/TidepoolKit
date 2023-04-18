@@ -8,8 +8,8 @@
 /* Class = "UILabel"; text = "User ID:"; ObjectID = "7ar-3v-bPv"; */
 "7ar-3v-bPv.text" = "User ID:";
 
-/* Class = "UILabel"; text = "Authentication Token:"; ObjectID = "Bdv-rG-eOg"; */
-"Bdv-rG-eOg.text" = "Authentication Token:";
+/* Class = "UILabel"; text = "Access Token:"; ObjectID = "Bdv-rG-eOg"; */
+"Bdv-rG-eOg.text" = "Access Token:";
 
 /* Class = "UILabel"; text = "<userId>"; ObjectID = "IkC-fw-Mnq"; */
 "IkC-fw-Mnq.text" = "<userId>";

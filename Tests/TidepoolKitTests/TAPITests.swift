@@ -252,7 +252,17 @@ class TAPISessionTests: TAPITests {
             username: "name@email.org")
     }
 
-    let infoHandler = URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/info", method: "GET"), success: URLProtocolMock.Success(statusCode: 200, body: TAPIInfoTests.info))
+    static var mockOIDCConfig: ProviderConfiguration {
+        return ProviderConfiguration(
+            issuer: "https://test.org/authurl/realms/testrealm/",
+            authorizationEndpoint: "https://test.org/authurl/realms/testrealm/auth",
+            tokenEndpoint: "https://test.org/authurl/realms/testrealm/token")
+    }
+
+    let authConfigHandler = URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/authurl/realms/testrealm/.well-known/openid-configuration", method: "GET"), success: URLProtocolMock.Success(statusCode: 200, body: mockOIDCConfig))
+
+    let environmentInfoHandler = URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/info", method: "GET"), success: URLProtocolMock.Success(statusCode: 200, body: TAPIInfoTests.info))
+    
     let userHandler = URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/auth/user", method: "GET"), success: URLProtocolMock.Success(statusCode: 200, body: TAPILoginTests.mockUser))
 
 
@@ -278,7 +288,7 @@ class TAPILoginTests: TAPISessionTests {
     func testSuccessfulLogin() async {
         let mockUIViewController = await UIViewController()
         do {
-            URLProtocolMock.handlers = [infoHandler, userHandler]
+            URLProtocolMock.handlers = [environmentInfoHandler, authConfigHandler, userHandler]
 
             try await api.login(environment: session.environment, presenting: mockUIViewController)
 
@@ -296,7 +306,7 @@ class TAPILoginTests: TAPISessionTests {
     }
 
     func testFailedLogin() async {
-        URLProtocolMock.handlers = [infoHandler]
+        URLProtocolMock.handlers = [environmentInfoHandler, authConfigHandler]
         let mockUIViewController = await UIViewController()
         do {
             authorization.loginFailureError = TError.missingAuthenticationState
@@ -312,7 +322,7 @@ class TAPILoginTests: TAPISessionTests {
 
     func testSessionRefresh() async {
         do {
-            URLProtocolMock.handlers = [infoHandler]
+            URLProtocolMock.handlers = [environmentInfoHandler, authConfigHandler]
             let newExpiration = Date().addingTimeInterval(12 * 60 * 60)
             authorization.accessTokenExpirationDate = newExpiration
             try await api.refreshSession()
@@ -338,7 +348,8 @@ class TAPILoginTests: TAPISessionTests {
         let headers = ["X-Tidepool-Session-Token": refreshedAccessToken, "X-Tidepool-Trace-Session": session.trace!]
 
         URLProtocolMock.handlers = [
-            infoHandler,
+            environmentInfoHandler,
+            authConfigHandler,
             URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/metadata/\(userId)/profile", method: "GET", headers: headers), success: URLProtocolMock.Success(statusCode: 200, headers: headers, body: TProfileTests.profile))
         ]
 
@@ -406,7 +417,7 @@ class TAPIGetProfileTests: TAPISessionTests {
     }
 
     func testRequestNotAuthenticated() async {
-        URLProtocolMock.handlers = [getProfileHandler, infoHandler]
+        URLProtocolMock.handlers = [getProfileHandler, environmentInfoHandler, authConfigHandler]
         await setUpRequestNotAuthenticated()
 
         do {

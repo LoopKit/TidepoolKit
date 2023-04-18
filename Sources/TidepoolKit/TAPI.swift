@@ -147,7 +147,7 @@ public actor TAPI {
         }
     }
 
-    private func lookupOIDConfiguration(environment: TEnvironment) async throws -> OIDServiceConfiguration {
+    private func lookupOIDConfiguration(environment: TEnvironment) async throws -> ProviderConfiguration {
 
         // Lookup /info for current Tidepool environment, for issuer URL
         let info = try await getInfo(environment: environment)
@@ -156,10 +156,62 @@ public actor TAPI {
             throw TError.missingAuthenticationIssuer
         }
 
-        return try await authorization.getServiceConfiguration(issuer: issuer)
+        return try await getServiceConfiguration(issuer: issuer)
     }
 
     // MARK: - Authentication
+
+    public func revokeTokens() async throws {
+        guard let session else {
+            throw TError.sessionMissing
+        }
+
+        // Lookup /info for current Tidepool environment, for issuer URL
+        let info = try await getInfo(environment: session.environment)
+
+        guard let issuer = info.auth?.issuerURL else {
+            throw TError.missingAuthenticationIssuer
+        }
+
+        let config = try await getServiceConfiguration(issuer: issuer)
+
+        guard let revokeURLStr = config.revocationEndpoint, let revokeURL = URL(string: revokeURLStr) else {
+            throw TError.missingAuthenticationConfiguration
+        }
+
+        try await revokeToken(revocationURL: revokeURL, token: session.accessToken, tokenType: "access_token")
+
+        if let refreshToken = session.refreshToken {
+            try await revokeToken(revocationURL: revokeURL, token: refreshToken, tokenType: "refresh_token")
+        }
+    }
+
+    private func revokeToken(revocationURL: URL, token: String, tokenType: String) async throws {
+
+        var bodyComponents = URLComponents()
+        bodyComponents.queryItems = [
+            URLQueryItem(name: "token", value: token),
+            URLQueryItem(name: "token_type_hint", value: tokenType),
+            URLQueryItem(name: "client_id", value: clientId),
+        ]
+
+        var request = URLRequest(url: revocationURL)
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpMethod = "POST"
+        request.httpBody = bodyComponents.query?.data(using: .utf8)
+
+        let (data, response) = try await urlSession.data(for: request)
+
+        guard let response = response as? HTTPURLResponse else {
+            throw TError.responseUnexpected(response, data)
+        }
+
+        guard response.statusCode >= 200 && response.statusCode <= 299 else {
+            throw TError.responseUnexpectedStatusCode(response, data)
+        }
+
+        // Token has successfully been
+    }
 
     /// Login to the Tidepool environment using AppAuth (OAuth2/OpenID-Connect)
     /// used internally by the LoginSignupViewController.
@@ -172,8 +224,12 @@ public actor TAPI {
 
         let config = try await lookupOIDConfiguration(environment: environment)
 
+        guard let oidConfig = OIDServiceConfiguration(from: config) else {
+            throw TError.missingAuthenticationConfiguration
+        }
+
         let request = OIDAuthorizationRequest(
-            configuration: config,
+            configuration: oidConfig,
             clientId: self.clientId,
             clientSecret: nil,
             scopes: ["openid", "offline_access"],
@@ -228,8 +284,12 @@ public actor TAPI {
 
         let config = try await lookupOIDConfiguration(environment: session.environment)
 
+        guard let oidConfig = OIDServiceConfiguration(from: config) else {
+            throw TError.missingAuthenticationConfiguration
+        }
+
         let request = OIDTokenRequest(
-            configuration: config,
+            configuration: oidConfig,
             grantType: OIDGrantTypeRefreshToken,
             authorizationCode: nil,
             redirectURL: nil,
@@ -682,6 +742,26 @@ public actor TAPI {
         request1?.setValue(session.accessToken, forHTTPHeaderField: HTTPHeaderField.tidepoolSessionToken.rawValue)
         return try await self.performRequest(request1, allowSessionRefreshAfterFailure: false)
     }
+
+    private func getServiceConfiguration(issuer: URL) async throws -> ProviderConfiguration {
+
+        // Lookup OpenID-Connect Service provider configuration
+
+        let (data, response) = try await urlSession.data(from: issuer.appendingPathComponent(".well-known/openid-configuration"))
+
+        guard let response = response as? HTTPURLResponse else {
+            throw TError.responseUnexpected(response, data)
+        }
+
+        guard response.statusCode >= 200 && response.statusCode <= 299 else {
+            throw TError.responseUnexpectedStatusCode(response, data)
+        }
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(ProviderConfiguration.self, from: data)
+    }
+
 
     private static var defaultUserAgent: String {
         return "\(Bundle.main.userAgent) \(Bundle(for: self).userAgent) \(ProcessInfo.processInfo.userAgent)"

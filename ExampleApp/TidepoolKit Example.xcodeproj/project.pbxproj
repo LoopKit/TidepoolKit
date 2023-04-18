@@ -27,7 +27,6 @@
 		A9C9D2562400CD7A00D66F16 /* UTF8TextFileActivityItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C9D2552400CD7A00D66F16 /* UTF8TextFileActivityItem.swift */; };
 		C185B9C829E854700039C101 /* TidepoolKit in Frameworks */ = {isa = PBXBuildFile; productRef = C185B9C729E854700039C101 /* TidepoolKit */; };
 		C185B9CA29E859610039C101 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C185B9C929E859610039C101 /* LoginView.swift */; };
-		C185B9CC29E881480039C101 /* LoginViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C185B9CB29E881480039C101 /* LoginViewModel.swift */; };
 		C19C9F5729CA121700A6D3D0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C19C9F5929CA121700A6D3D0 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -86,7 +85,6 @@
 		C16A8D8C29AFC50500D79922 /* TidepoolKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = TidepoolKit; sourceTree = "<group>"; };
 		C185B9C629E854590039C101 /* TidepoolKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = TidepoolKit; path = ..; sourceTree = "<group>"; };
 		C185B9C929E859610039C101 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
-		C185B9CB29E881480039C101 /* LoginViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewModel.swift; sourceTree = "<group>"; };
 		C19C9F5829CA121700A6D3D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C19C9F5B29CA127D00A6D3D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -129,7 +127,6 @@
 				A994916623FB288E00865738 /* Logging.swift */,
 				A943538E23C932D10093CFA3 /* RootTableViewController.swift */,
 				C185B9C929E859610039C101 /* LoginView.swift */,
-				C185B9CB29E881480039C101 /* LoginViewModel.swift */,
 				A943539323C932D20093CFA3 /* Assets.xcassets */,
 				A943539523C932D20093CFA3 /* LaunchScreen.storyboard */,
 				A943539023C932D10093CFA3 /* Main.storyboard */,
@@ -272,7 +269,6 @@
 				A92621C526E6C2F6007DB99D /* TimeInterval.swift in Sources */,
 				A9C57C5424005C3800A5964D /* LoadingTableViewCell.swift in Sources */,
 				A943538F23C932D10093CFA3 /* RootTableViewController.swift in Sources */,
-				C185B9CC29E881480039C101 /* LoginViewModel.swift in Sources */,
 				A9C9D2562400CD7A00D66F16 /* UTF8TextFileActivityItem.swift in Sources */,
 				A9C9D2542400CC6500D66F16 /* UserDefaults.swift in Sources */,
 				A9C9D24F2400BFCC00D66F16 /* TextViewController.swift in Sources */,

@@ -185,6 +185,7 @@ struct LoginView_Previews: PreviewProvider {
             isLoggedIn: false,
             environments: [],
             login: nil,
-            logout: nil)
+            logout: nil
+        )
     }
 }

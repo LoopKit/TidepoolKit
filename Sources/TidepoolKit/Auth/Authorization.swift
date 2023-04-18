@@ -15,8 +15,6 @@ import AppAuth
 protocol Authorization: AnyObject {
     var currentAuthorizationFlow: OIDExternalUserAgentSession? { get set }
 
-    func getServiceConfiguration(issuer: URL) async throws -> OIDServiceConfiguration
-
     // Used for triggering interactive user authentication/authorization flow
     func presentAuth(request: OIDAuthorizationRequest, presenting: UIViewController) async throws -> AuthorizationState
 
@@ -45,30 +43,33 @@ extension OIDAuthState: AuthorizationState {
 extension OIDTokenResponse: AuthorizationState {}
 
 
+extension OIDServiceConfiguration {
+    convenience init?(from config: ProviderConfiguration) {
+        guard let authorizationEndpoint = URL(string: config.authorizationEndpoint),
+              let tokenEndpoint = URL(string: config.tokenEndpoint),
+              let issuer = URL(string: config.issuer)
+        else {
+            return nil
+        }
+
+        var endSessionEndpoint: URL?
+        if let endSessionEndpointStr = config.endSessionEndpoint {
+            endSessionEndpoint = URL(string: endSessionEndpointStr)
+        } else {
+            endSessionEndpoint = nil
+        }
+
+        self.init(
+            authorizationEndpoint: authorizationEndpoint,
+            tokenEndpoint: tokenEndpoint,
+            issuer: issuer,
+            registrationEndpoint: nil,
+            endSessionEndpoint: endSessionEndpoint)
+    }
+}
 
 class AppAuthAuthorization: Authorization {
     var currentAuthorizationFlow: OIDExternalUserAgentSession?
-
-    func getServiceConfiguration(issuer: URL) async throws -> OIDServiceConfiguration {
-        // Lookup OpenID Service configuration for this environment, for various OpenID endpoints
-        let config: OIDServiceConfiguration = try await withCheckedThrowingContinuation { continuation in
-            OIDAuthorizationService.discoverConfiguration(forIssuer: issuer) { configuration, error in
-                guard error == nil else {
-                    continuation.resume(throwing: TError.network(error))
-                    return
-                }
-
-                guard let config = configuration else {
-                    continuation.resume(throwing: TError.missingAuthenticationConfiguration)
-                    return
-                }
-
-                continuation.resume(returning: config)
-            }
-        }
-        return config
-
-    }
 
     func presentAuth(request: OIDAuthorizationRequest, presenting: UIViewController) async throws -> AuthorizationState {
         // Present the authentication session using AppAuth

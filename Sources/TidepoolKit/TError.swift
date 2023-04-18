@@ -35,6 +35,7 @@ public enum TError: Error {
     /// The request was invalid and not sent.
     case requestInvalid
 
+    /// URLComponents are invalid for forming a URL
     case invalidURL(URLComponents)
 
     /// The server responded that the request was bad or malformed. Equivalent to HTTP status code 400.
@@ -131,8 +132,8 @@ extension TError: LocalizedError {
             return LocalizedString("The requested resource was not found.", comment: "The default localized description of the request resource not found error")
         case .responseUnexpected:
             return LocalizedString("The request returned an unexpected response.", comment: "The default localized description of the response unexpected error")
-        case .responseUnexpectedStatusCode:
-            return LocalizedString("The request returned an unexpected response status code.", comment: "The default localized description of the response unexpected status code error")
+        case .responseUnexpectedStatusCode(let response, _):
+            return String(format: LocalizedString("The request returned an unexpected response status code: %1$@", comment: "The formate string for localized description of the response unexpected status code error (1: status code)"), String(describing: response.statusCode))
         case .responseNotAuthenticated:
             return LocalizedString("The request returned an unauthenticated response.", comment: "The default localized description of the response not authenticated error")
         case .responseMissingJSON:

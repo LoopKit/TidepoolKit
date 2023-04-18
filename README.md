@@ -4,5 +4,5 @@ A Swift Framework/Package for connecting to the [Tidepool API](https://tidepool.
 
 ## Example
 
-See the [example app](https://github.com/tidepool-org/TidepoolKit/tree/main/ExampleApp/TidepoolKit%20Example)
+See the [example app](ExampleApp/TidepoolKit%20Example)
 

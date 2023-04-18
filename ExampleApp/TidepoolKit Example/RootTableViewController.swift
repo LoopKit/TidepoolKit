@@ -114,6 +114,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
     private enum Authentication: Int, CaseIterable {
         case account
         case refresh
+        case revoke
     }
 
     private enum Profile: Int, CaseIterable {
@@ -185,6 +186,9 @@ class RootTableViewController: UITableViewController, TAPIObserver {
                 cell.isEnabled = session == nil
             case .refresh:
                 cell.textLabel?.text = NSLocalizedString("Refresh", comment: "The text label of the authentication refresh cell")
+                cell.isEnabled = session != nil
+            case .revoke:
+                cell.textLabel?.text = NSLocalizedString("Revoke Token", comment: "The text label of the authentication revoke cell")
                 cell.isEnabled = session != nil
             }
             return cell
@@ -259,11 +263,17 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             let cell = tableView.cellForRow(at: indexPath) as! TextButtonTableViewCell
             switch Authentication(rawValue: indexPath.row)! {
             case .account:
-                login()
+                showAccount()
             case .refresh:
                 Task {
                     cell.isLoading = true
                     await refresh()
+                    cell.stopLoading()
+                }
+            case .revoke:
+                Task {
+                    cell.isLoading = true
+                    await revokeToken()
                     cell.stopLoading()
                 }
             }
@@ -309,7 +319,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
         return self.presentedViewController ?? self
     }
 
-    private func login() {
+    private func showAccount() {
         Task {
             let environments = await self.api.environments
             let currentEnvironment = self.session?.environment ?? self.api.defaultEnvironment ?? environments.first!
@@ -336,6 +346,15 @@ class RootTableViewController: UITableViewController, TAPIObserver {
             self.present(UIAlertController(error: error), animated: true)
         }
     }
+
+    private func revokeToken() async {
+        do {
+            try await api.revokeTokens()
+        } catch {
+            self.present(UIAlertController(error: error), animated: true)
+        }
+    }
+
 
     private func logout() async {
         await api.logout()
