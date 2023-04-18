@@ -25,8 +25,9 @@
 		C145902A29E5C2790072BF00 /* AppAuthCore in Frameworks */ = {isa = PBXBuildFile; productRef = C145902929E5C2790072BF00 /* AppAuthCore */; };
 		C16DA94529B8CDF400CC3610 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C16DA93E29B8CB6400CC3610 /* Assets.xcassets */; };
 		C19C9F5229CA0E6D00A6D3D0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C19C9F5429CA0E6D00A6D3D0 /* Localizable.strings */; };
-		C1A6210B29EC83EE00B5A073 /* Authorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A6210A29EC83EE00B5A073 /* Authorization.swift */; };
 		C1A6210D29EC840F00B5A073 /* TUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A6210C29EC840F00B5A073 /* TUser.swift */; };
+		C1C9414329EEDC55008D3E05 /* Authorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C9414129EEDC54008D3E05 /* Authorization.swift */; };
+		C1C9414429EEDC55008D3E05 /* ProviderConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C9414229EEDC54008D3E05 /* ProviderConfiguration.swift */; };
 		OBJ_181 /* JSONDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* JSONDecoder.swift */; };
 		OBJ_182 /* JSONEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* JSONEncoder.swift */; };
 		OBJ_183 /* ActionButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_14 /* ActionButtonStyle.swift */; };
@@ -202,9 +203,10 @@
 		C15ADC6D29CA17CB008D80F1 /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C15ADC6E29CA17D1008D80F1 /* sk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sk; path = sk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C16DA93E29B8CB6400CC3610 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		C1A6210A29EC83EE00B5A073 /* Authorization.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Authorization.swift; path = Sources/TidepoolKit/Authorization.swift; sourceTree = SOURCE_ROOT; };
 		C1A6210C29EC840F00B5A073 /* TUser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TUser.swift; sourceTree = "<group>"; };
 		C1B1539429CA264600563369 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		C1C9414129EEDC54008D3E05 /* Authorization.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Authorization.swift; sourceTree = "<group>"; };
+		C1C9414229EEDC54008D3E05 /* ProviderConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProviderConfiguration.swift; sourceTree = "<group>"; };
 		OBJ_10 /* JSONDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDecoder.swift; sourceTree = "<group>"; };
 		OBJ_103 /* JSONDecoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONDecoderTests.swift; sourceTree = "<group>"; };
 		OBJ_104 /* JSONEncoderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONEncoderTests.swift; sourceTree = "<group>"; };
@@ -371,6 +373,15 @@
 				C19C9F5429CA0E6D00A6D3D0 /* Localizable.strings */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		C1C9414029EEDC54008D3E05 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				C1C9414129EEDC54008D3E05 /* Authorization.swift */,
+				C1C9414229EEDC54008D3E05 /* ProviderConfiguration.swift */,
+			);
+			path = Auth;
 			sourceTree = "<group>";
 		};
 		OBJ_100 /* Tests */ = {
@@ -720,11 +731,11 @@
 		OBJ_8 /* TidepoolKit */ = {
 			isa = PBXGroup;
 			children = (
+				C1C9414029EEDC54008D3E05 /* Auth */,
 				C16DA93D29B8CB6400CC3610 /* Resources */,
 				OBJ_9 /* Extensions */,
 				OBJ_12 /* Internal */,
 				OBJ_38 /* Model */,
-				C1A6210A29EC83EE00B5A073 /* Authorization.swift */,
 				OBJ_92 /* TAPI.swift */,
 				OBJ_93 /* TEnvironment.swift */,
 				OBJ_94 /* TError.swift */,
@@ -875,7 +886,6 @@
 				OBJ_183 /* ActionButtonStyle.swift in Sources */,
 				OBJ_184 /* LocalizedString.swift in Sources */,
 				OBJ_185 /* DNS.swift in Sources */,
-				C1A6210B29EC83EE00B5A073 /* Authorization.swift in Sources */,
 				OBJ_186 /* Bundle.swift in Sources */,
 				OBJ_187 /* Codable.swift in Sources */,
 				OBJ_188 /* DNS+TEnvironment.swift in Sources */,
@@ -918,6 +928,7 @@
 				OBJ_226 /* TControllerSettingsDatum.swift in Sources */,
 				OBJ_227 /* TControllerStatusDatum.swift in Sources */,
 				OBJ_228 /* TDatum.swift in Sources */,
+				C1C9414429EEDC55008D3E05 /* ProviderConfiguration.swift in Sources */,
 				OBJ_229 /* TDosingDecisionDatum.swift in Sources */,
 				OBJ_230 /* TFoodDatum.swift in Sources */,
 				OBJ_231 /* TInsulinDatum.swift in Sources */,
@@ -933,6 +944,7 @@
 				OBJ_240 /* TAssociation.swift in Sources */,
 				OBJ_241 /* TBloodGlucose.swift in Sources */,
 				OBJ_242 /* TCarbohydrate.swift in Sources */,
+				C1C9414329EEDC55008D3E05 /* Authorization.swift in Sources */,
 				OBJ_243 /* TDataSet.swift in Sources */,
 				OBJ_244 /* TDictionary.swift in Sources */,
 				OBJ_245 /* TInfo.swift in Sources */,
