@@ -78,7 +78,7 @@ class AppAuthAuthorization: Authorization {
                 var f: OIDExternalUserAgentSession? = nil
                 f = OIDAuthState.authState(byPresenting: request, presenting: presenting) { authState, error in
                     if let error = error {
-                        continuation.resume(throwing: TError.network(error))
+                        continuation.resume(throwing: error)
                         return
                     }
 

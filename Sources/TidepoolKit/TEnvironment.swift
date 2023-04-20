@@ -53,6 +53,35 @@ public struct TEnvironment: Codable, Equatable {
         }
         return url
     }
+
+    static public var productionEnvironment: TEnvironment {
+        return DNSSRVRecordsImplicit.first!.environment
+    }
+
+    /// Find environments  from the latest DNS SRV record lookup. Production is always the first element.
+    static public func fetchEnvironments() async throws -> [TEnvironment] {
+        return try await withCheckedThrowingContinuation { continuation in
+            DNS.lookupSRVRecords(for: Self.DNSSRVRecordsDomainName) { result in
+                switch result {
+                case .failure(let error):
+                    continuation.resume(throwing: TError.network(error))
+                case .success(let records):
+                    var records = records + Self.DNSSRVRecordsImplicit
+                    records = records.map { record in
+                        if record.host != "localhost" {
+                            return record
+                        }
+                        return DNSSRVRecord(priority: UInt16.max, weight: record.weight, host: record.host, port: record.port)
+                    }
+                    let environments = records.sorted().environments
+                    continuation.resume(returning: environments)
+                }
+            }
+        }
+    }
+
+    private static let DNSSRVRecordsDomainName = "environments-srv.tidepool.org"
+    private static let DNSSRVRecordsImplicit = [DNSSRVRecord(priority: UInt16.min, weight: UInt16.max, host: "app.tidepool.org", port: 443)]
 }
 
 extension TEnvironment: CustomStringConvertible {

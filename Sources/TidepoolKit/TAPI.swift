@@ -23,11 +23,6 @@ public protocol TAPIObserver: AnyObject {
 /// The Tidepool API
 public actor TAPI {
 
-    /// All currently known environments. Will always include, as the first element, production. It will additionally include any
-    /// environments discovered from the latest DNS SRV record lookup. When an instance of TAPI is created it will automatically
-    /// perform a DNS SRV record lookup in the background. A client should generally only have one instance of TAPI.
-    public var environments: [TEnvironment]
-    
     /// The default environment is derived from the host app group. See UserDefaults extension.
     nonisolated public var defaultEnvironment: TEnvironment? {
         get {
@@ -86,19 +81,12 @@ public actor TAPI {
     ///   - clientId: The client id to use when authenticating
     ///   - redirectURL: The redirect url use when authenticating
     ///   - session: The initial session to use, if any.
-    ///   - automaticallyFetchEnvironments: Automatically fetch an updated list of environments when created.
-    public init(clientId: String, redirectURL: URL, session: TSession? = nil, automaticallyFetchEnvironments: Bool = true) {
+    public init(clientId: String, redirectURL: URL, session: TSession? = nil) {
         self.clientId = clientId
         self.redirectURL = redirectURL
-        self.environments = TAPI.implicitEnvironments
         self.urlSessionConfiguration = TAPI.defaultURLSessionConfiguration
         self.session = session
         self.authorization = AppAuthAuthorization()
-        if automaticallyFetchEnvironments {
-            Task {
-                await fetchEnvironments()
-            }
-        }
     }
 
     /// Start observing the API.
@@ -116,35 +104,6 @@ public actor TAPI {
     ///     - observer: The observer observing the API.
     public func removeObserver(_ observer: TAPIObserver) {
         observers.removeElement(observer)
-    }
-
-
-    // MARK: - Environment
-
-    /// Manually fetch the latest environments. Production is always the first element.
-    ///
-    /// - Parameters:
-    ///   - completion: The completion function to invoke with the latest environments or any error.
-    public func fetchEnvironments(completion: ((Result<[TEnvironment], TError>) -> Void)? = nil) {
-        DNS.lookupSRVRecords(for: TAPI.DNSSRVRecordsDomainName) { result in
-            switch result {
-            case .failure(let error):
-                self.logging?.error("Failure during DNS SRV record lookup [\(error)]")
-                completion?(.failure(.network(error)))
-            case .success(let records):
-                var records = records + TAPI.DNSSRVRecordsImplicit
-                records = records.map { record in
-                    if record.host != "localhost" {
-                        return record
-                    }
-                    return DNSSRVRecord(priority: UInt16.max, weight: record.weight, host: record.host, port: record.port)
-                }
-                let environments = records.sorted().environments
-                self.environments = environments
-                self.logging?.debug("Successful DNS SRV record lookup")
-                completion?(.success(environments))
-            }
-        }
     }
 
     private func lookupOIDConfiguration(environment: TEnvironment) async throws -> ProviderConfiguration {
@@ -238,7 +197,21 @@ public actor TAPI {
             additionalParameters: [:]
         )
 
-        let authState = try await authorization.presentAuth(request: request, presenting: presenting)
+        let authState: any AuthorizationState
+
+        do {
+            authState = try await authorization.presentAuth(request: request, presenting: presenting)
+        } catch {
+            let authError = error as NSError
+            if authError.domain == OIDGeneralErrorDomain {
+                if authError.code == -3 /* OIDErrorCodeUserCanceledAuthorizationFlow */ ||
+                    authError.code == -4 /* OIDErrorCodeProgramCanceledAuthorizationFlow */
+                {
+                    throw TError.loginCanceled
+                }
+            }
+            throw error
+        }
 
         guard let accessToken = authState.accessToken else
         {
@@ -260,6 +233,7 @@ public actor TAPI {
             refreshToken: authState.refreshToken,
             userId: currentUser.userid,
             username: currentUser.username)
+
     }
 
     private func basicAuthorizationFromCredentials(email: String, password: String) -> String {
@@ -778,13 +752,6 @@ public actor TAPI {
 
     private var urlSession: URLSession = URLSession(configuration: defaultURLSessionConfiguration)
 
-    private static var implicitEnvironments: [TEnvironment] {
-        return DNSSRVRecordsImplicit.environments
-    }
-
-    private static let DNSSRVRecordsDomainName = "environments-srv.tidepool.org"
-
-    private static let DNSSRVRecordsImplicit = [DNSSRVRecord(priority: UInt16.min, weight: UInt16.max, host: "app.tidepool.org", port: 443)]
 
     private enum HTTPHeaderField: String {
         case authorization = "Authorization"

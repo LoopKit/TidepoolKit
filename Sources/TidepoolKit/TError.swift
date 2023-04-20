@@ -17,6 +17,9 @@ public enum TError: Error {
     /// The session is missing.
     case sessionMissing
 
+    /// The login was canceled.
+    case loginCanceled
+
     /// Missing refresh token
     case refreshTokenMissing
 
@@ -102,6 +105,8 @@ extension TError: LocalizedError {
             return LocalizedString("A network error occurred.", comment: "The default localized description of the network error")
         case .sessionMissing:
             return LocalizedString("The session is missing.", comment: "The default localized description of the session missing error")
+        case .loginCanceled:
+            return LocalizedString("Login was canceled.", comment: "Localized description for TError.loginCanceled")
         case .refreshTokenMissing:
             return LocalizedString("The refreshToken is missing.", comment: "The default localized description of the refresh token missing error")
         case .missingAuthenticationIssuer:
