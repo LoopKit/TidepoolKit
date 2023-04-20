@@ -321,7 +321,7 @@ class RootTableViewController: UITableViewController, TAPIObserver {
 
     private func showAccount() {
         Task {
-            let environments = await self.api.environments
+            let environments = try await TEnvironment.fetchEnvironments()
             let currentEnvironment = self.session?.environment ?? self.api.defaultEnvironment ?? environments.first!
             let view = LoginView(
                 selectedEnvironment: currentEnvironment,
