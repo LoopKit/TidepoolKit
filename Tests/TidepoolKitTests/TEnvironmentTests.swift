@@ -53,6 +53,10 @@ class TEnvironmentTests: XCTestCase {
         XCTAssertEqual(url.absoluteString, "https://test.tidepool.org/alpha/beta?foo=one&bar=two")
     }
 
+    func testImplicitEnvironments() {
+        XCTAssertEqual(TEnvironment.productionEnvironment, TEnvironment(host: "app.tidepool.org", port: 443))
+    }
+
     func testDescription() {
         XCTAssertEqual(TEnvironmentTests.environment.description, "test.tidepool.org:443")
     }

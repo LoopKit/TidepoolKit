@@ -23,7 +23,7 @@ class TAPITests: XCTestCase {
 
         URLProtocolMock.handlers = []
 
-        self.api = TAPI(clientId: "test", redirectURL: URL(string: "org.tidepool.TidepoolKit://redirect")!, automaticallyFetchEnvironments: false)
+        self.api = TAPI(clientId: "test", redirectURL: URL(string: "org.tidepool.TidepoolKit://redirect")!)
         let urlSessionConfiguration = await api.urlSessionConfiguration
         urlSessionConfiguration.protocolClasses = [URLProtocolMock.self]
         await self.api.setURLSessionConfiguration(urlSessionConfiguration)
@@ -60,13 +60,6 @@ class TAPITests: XCTestCase {
 
     func setUpResponseMalformedJSON() {
         URLProtocolMock.handlers[0].success?.body = nil
-    }
-}
-
-class TAPIEnvironmentTests: TAPITests {
-    func testImplicitEnvironments() async {
-        let apiEnvironments = await api.environments
-        XCTAssertEqual(apiEnvironments, [TEnvironment(host: "app.tidepool.org", port: 443)])
     }
 }
 
