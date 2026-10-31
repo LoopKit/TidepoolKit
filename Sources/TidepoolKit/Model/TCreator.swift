@@ -10,9 +10,9 @@ import Foundation
 
 public struct TCreator: Codable, Equatable {
     public var userid: String
-    public var profile: TProfile
+    public var profile: TProfile?
     
-    public init(userid: String, profile: TProfile) {
+    public init(userid: String, profile: TProfile?) {
         self.userid = userid
         self.profile = profile
     }

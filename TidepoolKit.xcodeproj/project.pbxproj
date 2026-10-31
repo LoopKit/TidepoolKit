@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		B4B0A0802AB47302004B0699 /* TClientData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4B0A07F2AB47302004B0699 /* TClientData.swift */; };
 		B4EF22E42A3B9A2F003507F6 /* TCreator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4EF22E32A3B9A2F003507F6 /* TCreator.swift */; };
 		C16119D329D2863200E70E5E /* TTrusteeUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16119D229D2863200E70E5E /* TTrusteeUser.swift */; };
 		C16DA94529B8CDF400CC3610 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C16DA93E29B8CB6400CC3610 /* Assets.xcassets */; };
@@ -32,6 +33,8 @@
 		C18A08EB2A0DD04E005A41FE /* TInvite.swift in Sources */ = {isa = PBXBuildFile; fileRef = C18A08EA2A0DD04E005A41FE /* TInvite.swift */; };
 		C19C9F5229CA0E6D00A6D3D0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C19C9F5429CA0E6D00A6D3D0 /* Localizable.strings */; };
 		C1A6210D29EC840F00B5A073 /* TUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A6210C29EC840F00B5A073 /* TUser.swift */; };
+		C1A685462C0F65300071C171 /* TDeviceLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A685442C0F65300071C171 /* TDeviceLogEntry.swift */; };
+		C1A685472C0F65300071C171 /* TDeviceLogsMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A685452C0F65300071C171 /* TDeviceLogsMetadata.swift */; };
 		C1A85A9E2A1CFDB800430101 /* TPermissions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A85A9D2A1CFDB800430101 /* TPermissions.swift */; };
 		C1C9414429EEDC55008D3E05 /* ProviderConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1C9414229EEDC54008D3E05 /* ProviderConfiguration.swift */; };
 		E086D1D02A2E4EEF00BA2ED4 /* TPendingInvite.swift in Sources */ = {isa = PBXBuildFile; fileRef = E086D1CF2A2E4EEF00BA2ED4 /* TPendingInvite.swift */; };
@@ -187,6 +190,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		B4B0A07F2AB47302004B0699 /* TClientData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TClientData.swift; sourceTree = "<group>"; };
 		B4EF22E32A3B9A2F003507F6 /* TCreator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TCreator.swift; sourceTree = "<group>"; };
 		C100F68429CA25E100586CAB /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C15ADC5A29CA1688008D80F1 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -219,6 +223,8 @@
 		C17CDEED2A0137A3003F4C84 /* Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Data.swift; sourceTree = "<group>"; };
 		C18A08EA2A0DD04E005A41FE /* TInvite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TInvite.swift; sourceTree = "<group>"; };
 		C1A6210C29EC840F00B5A073 /* TUser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TUser.swift; sourceTree = "<group>"; };
+		C1A685442C0F65300071C171 /* TDeviceLogEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TDeviceLogEntry.swift; sourceTree = "<group>"; };
+		C1A685452C0F65300071C171 /* TDeviceLogsMetadata.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TDeviceLogsMetadata.swift; sourceTree = "<group>"; };
 		C1A85A9D2A1CFDB800430101 /* TPermissions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TPermissions.swift; sourceTree = "<group>"; };
 		C1B1539429CA264600563369 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C1C9414229EEDC54008D3E05 /* ProviderConfiguration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProviderConfiguration.swift; sourceTree = "<group>"; };
@@ -357,8 +363,8 @@
 		OBJ_94 /* TError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TError.swift; sourceTree = "<group>"; };
 		OBJ_95 /* TLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TLogging.swift; sourceTree = "<group>"; };
 		OBJ_96 /* TSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TSession.swift; sourceTree = "<group>"; };
-		"tidepoolkit::TidepoolKit::Product" /* TidepoolKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = TidepoolKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		"tidepoolkit::TidepoolKitTests::Product" /* TidepoolKitTests.xctest */ = {isa = PBXFileReference; lastKnownFileType = file; path = TidepoolKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		"tidepoolkit::TidepoolKit::Product" /* TidepoolKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = TidepoolKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		"tidepoolkit::TidepoolKitTests::Product" /* TidepoolKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = TidepoolKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -640,6 +646,8 @@
 				OBJ_83 /* TCarbohydrate.swift */,
 				B4EF22E32A3B9A2F003507F6 /* TCreator.swift */,
 				OBJ_84 /* TDataSet.swift */,
+				C1A685442C0F65300071C171 /* TDeviceLogEntry.swift */,
+				C1A685452C0F65300071C171 /* TDeviceLogsMetadata.swift */,
 				OBJ_85 /* TDictionary.swift */,
 				OBJ_86 /* TInfo.swift */,
 				OBJ_87 /* TInsulin.swift */,
@@ -666,6 +674,7 @@
 				OBJ_63 /* TCBGDatum.swift */,
 				OBJ_64 /* TCGMSettingsDatum.swift */,
 				OBJ_65 /* TCalculatorDatum.swift */,
+				B4B0A07F2AB47302004B0699 /* TClientData.swift */,
 				OBJ_66 /* TControllerSettingsDatum.swift */,
 				OBJ_67 /* TControllerStatusDatum.swift */,
 				OBJ_68 /* TDatum.swift */,
@@ -931,6 +940,7 @@
 				OBJ_200 /* UnfairLock.swift in Sources */,
 				OBJ_202 /* WeakSynchronizedSet.swift in Sources */,
 				OBJ_203 /* TAutomatedBasalDatum.swift in Sources */,
+				C1A685472C0F65300071C171 /* TDeviceLogsMetadata.swift in Sources */,
 				OBJ_204 /* TBasalDatum.swift in Sources */,
 				OBJ_205 /* TScheduledBasalDatum.swift in Sources */,
 				OBJ_206 /* TSuspendedBasalDatum.swift in Sources */,
@@ -970,6 +980,7 @@
 				OBJ_238 /* TPrescription.swift in Sources */,
 				C18A08EB2A0DD04E005A41FE /* TInvite.swift in Sources */,
 				OBJ_239 /* TPrescriptionClaim.swift in Sources */,
+				B4B0A0802AB47302004B0699 /* TClientData.swift in Sources */,
 				OBJ_240 /* TAssociation.swift in Sources */,
 				C16119D329D2863200E70E5E /* TTrusteeUser.swift in Sources */,
 				OBJ_241 /* TBloodGlucose.swift in Sources */,
@@ -980,6 +991,7 @@
 				OBJ_246 /* TInsulin.swift in Sources */,
 				OBJ_247 /* TLocation.swift in Sources */,
 				OBJ_248 /* TOrigin.swift in Sources */,
+				C1A685462C0F65300071C171 /* TDeviceLogEntry.swift in Sources */,
 				OBJ_249 /* TProfile.swift in Sources */,
 				OBJ_251 /* TAPI.swift in Sources */,
 				OBJ_252 /* TEnvironment.swift in Sources */,
@@ -1257,6 +1269,7 @@
 		OBJ_3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1292,6 +1305,7 @@
 		OBJ_4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;

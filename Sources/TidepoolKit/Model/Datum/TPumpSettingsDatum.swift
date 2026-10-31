@@ -14,7 +14,6 @@ public class TPumpSettingsDatum: TDatum, Decodable {
     public typealias InsulinFormulation = TInsulinDatum.Formulation
 
     public var activeScheduleName: String?
-    public var automatedDelivery: Bool?
     public var basal: Basal?
     public var basalRateSchedule: [BasalRateStart]?
     public var basalRateSchedules: [String: [BasalRateStart]]?
@@ -38,13 +37,11 @@ public class TPumpSettingsDatum: TDatum, Decodable {
     public var name: String?
     public var overridePresets: [String: OverridePreset]?
     public var scheduleTimeZoneOffset: TimeInterval?
-    public var serialNumber: String?
     public var softwareVersion: String?
     public var units: Units?
     
     public init(time: Date,
                 activeScheduleName: String? = nil,
-                automatedDelivery: Bool? = nil,
                 basal: Basal? = nil,
                 basalRateSchedule: [BasalRateStart]? = nil,
                 basalRateSchedules: [String: [BasalRateStart]]? = nil,
@@ -68,11 +65,9 @@ public class TPumpSettingsDatum: TDatum, Decodable {
                 name: String? = nil,
                 overridePresets: [String: OverridePreset]? = nil,
                 scheduleTimeZoneOffset: TimeInterval? = nil,
-                serialNumber: String? = nil,
                 softwareVersion: String? = nil,
                 units: Units? = nil) {
         self.activeScheduleName = activeScheduleName
-        self.automatedDelivery = automatedDelivery
         self.basal = basal
         self.basalRateSchedule = basalRateSchedule
         self.basalRateSchedules = basalRateSchedules
@@ -96,7 +91,6 @@ public class TPumpSettingsDatum: TDatum, Decodable {
         self.name = name
         self.overridePresets = overridePresets
         self.scheduleTimeZoneOffset = scheduleTimeZoneOffset
-        self.serialNumber = serialNumber
         self.softwareVersion = softwareVersion
         self.units = units
         super.init(.pumpSettings, time: time)
@@ -105,7 +99,6 @@ public class TPumpSettingsDatum: TDatum, Decodable {
     public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.activeScheduleName = try container.decodeIfPresent(String.self, forKey: .activeScheduleName)
-        self.automatedDelivery = try container.decodeIfPresent(Bool.self, forKey: .automatedDelivery)
         self.basal = try container.decodeIfPresent(Basal.self, forKey: .basal)
         self.basalRateSchedule = try container.decodeIfPresent([BasalRateStart].self, forKey: .basalRateSchedule)
         self.basalRateSchedules = try container.decodeIfPresent([String: [BasalRateStart]].self, forKey: .basalRateSchedules)
@@ -129,7 +122,6 @@ public class TPumpSettingsDatum: TDatum, Decodable {
         self.name = try container.decodeIfPresent(String.self, forKey: .name)
         self.overridePresets = try container.decodeIfPresent([String: OverridePreset].self, forKey: .overridePresets)
         self.scheduleTimeZoneOffset = try container.decodeIfPresent(Int.self, forKey: .scheduleTimeZoneOffset).map { .minutes($0) }
-        self.serialNumber = try container.decodeIfPresent(String.self, forKey: .serialNumber)
         self.softwareVersion = try container.decodeIfPresent(String.self, forKey: .softwareVersion)
         self.units = try container.decodeIfPresent(Units.self, forKey: .units)
         try super.init(.pumpSettings, from: decoder)
@@ -138,7 +130,6 @@ public class TPumpSettingsDatum: TDatum, Decodable {
     public override func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(activeScheduleName, forKey: .activeScheduleName)
-        try container.encodeIfPresent(automatedDelivery, forKey: .automatedDelivery)
         try container.encodeIfPresent(basal, forKey: .basal)
         try container.encodeIfPresent(basalRateSchedule, forKey: .basalRateSchedule)
         try container.encodeIfPresent(basalRateSchedules, forKey: .basalRateSchedules)
@@ -162,7 +153,6 @@ public class TPumpSettingsDatum: TDatum, Decodable {
         try container.encodeIfPresent(name, forKey: .name)
         try container.encodeIfPresent(overridePresets, forKey: .overridePresets)
         try container.encodeIfPresent(scheduleTimeZoneOffset.map { Int($0.minutes) }, forKey: .scheduleTimeZoneOffset)
-        try container.encodeIfPresent(serialNumber, forKey: .serialNumber)
         try container.encodeIfPresent(softwareVersion, forKey: .softwareVersion)
         try container.encodeIfPresent(units, forKey: .units)
         try super.encode(to: encoder)
@@ -482,7 +472,6 @@ public class TPumpSettingsDatum: TDatum, Decodable {
     
     private enum CodingKeys: String, CodingKey {
         case activeScheduleName = "activeSchedule"
-        case automatedDelivery
         case basal
         case basalRateSchedule = "basalSchedule"
         case basalRateSchedules = "basalSchedules"
@@ -506,7 +495,6 @@ public class TPumpSettingsDatum: TDatum, Decodable {
         case name
         case overridePresets
         case scheduleTimeZoneOffset
-        case serialNumber
         case softwareVersion
         case units
     }

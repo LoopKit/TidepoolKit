@@ -16,7 +16,6 @@ class TCGMSettingsDatumTests: XCTestCase {
                                                manufacturers: ["Alfa", "Romeo"],
                                                model: "Spider",
                                                name: "My Car",
-                                               serialNumber: "1234567890",
                                                softwareVersion: "12.13.14",
                                                transmitterId: "ABCDEF",
                                                units: .milligramsPerDeciliter,
@@ -30,7 +29,6 @@ class TCGMSettingsDatumTests: XCTestCase {
         "manufacturers": ["Alfa", "Romeo"],
         "model": "Spider",
         "name": "My Car",
-        "serialNumber": "1234567890",
         "softwareVersion": "12.13.14",
         "transmitterId": "ABCDEF",
         "units": "mg/dL",
@@ -45,7 +43,6 @@ class TCGMSettingsDatumTests: XCTestCase {
         XCTAssertEqual(cgmSettings.manufacturers, ["Alfa", "Romeo"])
         XCTAssertEqual(cgmSettings.model, "Spider")
         XCTAssertEqual(cgmSettings.name, "My Car")
-        XCTAssertEqual(cgmSettings.serialNumber, "1234567890")
         XCTAssertEqual(cgmSettings.softwareVersion, "12.13.14")
         XCTAssertEqual(cgmSettings.transmitterId, "ABCDEF")
         XCTAssertEqual(cgmSettings.units, .milligramsPerDeciliter)
@@ -252,7 +249,6 @@ extension TCGMSettingsDatum {
             self.manufacturers == other.manufacturers &&
             self.model == other.model &&
             self.name == other.name &&
-            self.serialNumber == other.serialNumber &&
             self.softwareVersion == other.softwareVersion &&
             self.transmitterId == other.transmitterId &&
             self.units == other.units &&

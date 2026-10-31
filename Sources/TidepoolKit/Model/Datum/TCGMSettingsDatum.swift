@@ -16,7 +16,6 @@ public class TCGMSettingsDatum: TDatum, Decodable {
     public var manufacturers: [String]?
     public var model: String?
     public var name: String?
-    public var serialNumber: String?
     public var softwareVersion: String?
     public var transmitterId: String?
     public var units: Units?
@@ -34,7 +33,6 @@ public class TCGMSettingsDatum: TDatum, Decodable {
                 manufacturers: [String]? = nil,
                 model: String? = nil,
                 name: String? = nil,
-                serialNumber: String? = nil,
                 softwareVersion: String? = nil,
                 transmitterId: String? = nil,
                 units: Units? = nil,
@@ -45,7 +43,6 @@ public class TCGMSettingsDatum: TDatum, Decodable {
         self.manufacturers = manufacturers
         self.model = model
         self.name = name
-        self.serialNumber = serialNumber
         self.softwareVersion = softwareVersion
         self.transmitterId = transmitterId
         self.units = units
@@ -61,7 +58,6 @@ public class TCGMSettingsDatum: TDatum, Decodable {
         self.manufacturers = try container.decodeIfPresent([String].self, forKey: .manufacturers)
         self.model = try container.decodeIfPresent(String.self, forKey: .model)
         self.name = try container.decodeIfPresent(String.self, forKey: .name)
-        self.serialNumber = try container.decodeIfPresent(String.self, forKey: .serialNumber)
         self.softwareVersion = try container.decodeIfPresent(String.self, forKey: .softwareVersion)
         self.transmitterId = try container.decodeIfPresent(String.self, forKey: .transmitterId)
         self.units = try container.decodeIfPresent(Units.self, forKey: .units)
@@ -81,7 +77,6 @@ public class TCGMSettingsDatum: TDatum, Decodable {
         try container.encodeIfPresent(manufacturers, forKey: .manufacturers)
         try container.encodeIfPresent(model, forKey: .model)
         try container.encodeIfPresent(name, forKey: .name)
-        try container.encodeIfPresent(serialNumber, forKey: .serialNumber)
         try container.encodeIfPresent(softwareVersion, forKey: .softwareVersion)
         try container.encodeIfPresent(transmitterId, forKey: .transmitterId)
         try container.encodeIfPresent(units, forKey: .units)
@@ -320,7 +315,6 @@ public class TCGMSettingsDatum: TDatum, Decodable {
         case manufacturers
         case model
         case name
-        case serialNumber
         case softwareVersion
         case transmitterId
         case units

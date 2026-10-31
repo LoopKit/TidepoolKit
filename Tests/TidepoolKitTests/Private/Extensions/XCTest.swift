@@ -14,16 +14,25 @@ public func XCTAssertCodableAsJSON<T>(_ codable: @autoclosure () -> T, _ jsonObj
     let jsonObject = jsonObject()
     let message = message()
 
-    func assertCodableAsJSON() throws {
-        let jsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: [.sortedKeys, .withoutEscapingSlashes])
-        let jsonString = String(data: jsonData, encoding: .utf8)
-        XCTAssertNotNil(jsonString, message, file: file, line: line)
-        if let jsonString = jsonString {
-            XCTAssertCodableAsJSON(codable, jsonString, message, file: file, line: line)
-        }
+    // Compare semantically (parse JSON back to Foundation objects, compare via
+    // NSDictionary/NSArray equality) rather than as raw strings. JSONEncoder and
+    // JSONSerialization don't agree on every detail of textual output -- newer
+    // Foundation emits Doubles at full IEEE-754 precision (e.g. 2.34 -> 2.3399...),
+    // and key ordering can also differ -- but the parsed values are equivalent.
+    func assertEncodableAsJSON() throws {
+        let codableData = try JSONEncoder.tidepool.encode(codable)
+        let codableParsed = try JSONSerialization.jsonObject(with: codableData)
+        XCTAssertEqual(codableParsed as? NSObject, jsonObject as? NSObject, message, file: file, line: line)
     }
 
-    XCTAssertNoThrow(try assertCodableAsJSON(), message, file: file, line: line)
+    func assertDecodableAsJSON() throws {
+        let jsonData = try JSONSerialization.data(withJSONObject: jsonObject)
+        let jsonCodable = try JSONDecoder.tidepool.decode(T.self, from: jsonData)
+        XCTAssertEqual(jsonCodable, codable, message, file: file, line: line)
+    }
+
+    XCTAssertNoThrow(try assertEncodableAsJSON(), message, file: file, line: line)
+    XCTAssertNoThrow(try assertDecodableAsJSON(), message, file: file, line: line)
 }
 
 public func XCTAssertCodableAsJSON<T>(_ codable: @autoclosure () -> T, _ jsonString: @autoclosure () -> String, _ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) where T: Codable, T: Equatable {
