@@ -13,7 +13,6 @@ class TPumpSettingsDatumTests: XCTestCase {
     static let pumpSettings = TPumpSettingsDatum(
         time: Date.test,
         activeScheduleName: "Activated",
-        automatedDelivery: true,
         basal: TPumpSettingsDatumBasalTests.basal,
         basalRateSchedule: [TPumpSettingsDatumBasalRateStartTests.basalRateStart, TPumpSettingsDatumBasalRateStartTests.basalRateStart],
         basalRateSchedules: [
@@ -56,7 +55,6 @@ class TPumpSettingsDatumTests: XCTestCase {
             "one": TPumpSettingsDatumOverridePresetTests.overridePreset
         ],
         scheduleTimeZoneOffset: -28800,
-        serialNumber: "1234567890",
         softwareVersion: "3.4.5",
         units: TPumpSettingsDatumUnitsTests.units
     )
@@ -64,7 +62,6 @@ class TPumpSettingsDatumTests: XCTestCase {
         "type": "pumpSettings",
         "time": Date.testJSONString,
         "activeSchedule": "Activated",
-        "automatedDelivery": true,
         "basal": TPumpSettingsDatumBasalTests.basalJSONDictionary,
         "basalSchedule": [TPumpSettingsDatumBasalRateStartTests.basalRateStartJSONDictionary, TPumpSettingsDatumBasalRateStartTests.basalRateStartJSONDictionary],
         "basalSchedules": [
@@ -107,7 +104,6 @@ class TPumpSettingsDatumTests: XCTestCase {
             "one": TPumpSettingsDatumOverridePresetTests.overridePresetJSONDictionary
         ],
         "scheduleTimeZoneOffset": -480,
-        "serialNumber": "1234567890",
         "softwareVersion": "3.4.5",
         "units": TPumpSettingsDatumUnitsTests.unitsJSONDictionary
     ]
@@ -115,7 +111,6 @@ class TPumpSettingsDatumTests: XCTestCase {
     func testInitializer() {
         let pumpSettings = TPumpSettingsDatumTests.pumpSettings
         XCTAssertEqual(pumpSettings.activeScheduleName, "Activated")
-        XCTAssertEqual(pumpSettings.automatedDelivery, true)
         XCTAssertEqual(pumpSettings.basal, TPumpSettingsDatumBasalTests.basal)
         XCTAssertEqual(pumpSettings.basalRateSchedule, [TPumpSettingsDatumBasalRateStartTests.basalRateStart, TPumpSettingsDatumBasalRateStartTests.basalRateStart])
         XCTAssertEqual(pumpSettings.basalRateSchedules, [
@@ -158,7 +153,6 @@ class TPumpSettingsDatumTests: XCTestCase {
             "one": TPumpSettingsDatumOverridePresetTests.overridePreset
         ])
         XCTAssertEqual(pumpSettings.scheduleTimeZoneOffset, -28800)
-        XCTAssertEqual(pumpSettings.serialNumber, "1234567890")
         XCTAssertEqual(pumpSettings.softwareVersion, "3.4.5")
         XCTAssertEqual(pumpSettings.units, TPumpSettingsDatumUnitsTests.units)
     }
@@ -527,7 +521,6 @@ extension TPumpSettingsDatum {
     func isEqual(to other: TPumpSettingsDatum) -> Bool {
         return super.isEqual(to: other) &&
             self.activeScheduleName == other.activeScheduleName &&
-            self.automatedDelivery == other.automatedDelivery &&
             self.basal == other.basal &&
             self.basalRateSchedule == other.basalRateSchedule &&
             self.basalRateSchedules == other.basalRateSchedules &&
@@ -551,7 +544,6 @@ extension TPumpSettingsDatum {
             self.name == other.name &&
             self.overridePresets == other.overridePresets &&
             self.scheduleTimeZoneOffset == other.scheduleTimeZoneOffset &&
-            self.serialNumber == other.serialNumber &&
             self.softwareVersion == other.softwareVersion &&
             self.units == other.units
     }

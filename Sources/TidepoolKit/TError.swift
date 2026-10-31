@@ -83,9 +83,6 @@ public enum TError: Error {
     /// The server response did not include valid JSON in the body.
     case responseMalformedJSON(HTTPURLResponse, Data, Error)
 
-    /// The server response included valid, but unexpected, JSON in the body.
-    case responseUnexpectedJSON(HTTPURLResponse, Data)
-
     /// The server response included malformed data.
     case responseMalformed(TAPI.MalformedResult)
 
@@ -151,8 +148,13 @@ extension TError: LocalizedError {
             return LocalizedString("The request was invalid.", comment: "The default localized description of the request malformed JSON error")
         case .requestNotAuthenticated:
             return LocalizedString("The request was not authenticated.", comment: "The default localized description of the request not authenticated error")
-        case .requestNotAuthorized:
-            return LocalizedString("The request was not authorized.", comment: "The default localized description of the request not authorized error")
+        case .requestNotAuthorized(_, let data):
+            if let data {
+                let bodyText = String(describing:String(decoding: data, as: UTF8.self))
+                return String(format: LocalizedString("The request was not authorized: %@", comment: "The default localized description of the request not authorized error (1: the body of the response)"), bodyText)
+            } else {
+                return LocalizedString("The request was not authorized", comment: "The default localized description of the request not authorized error (1: the body of the response)")
+            }
         case .requestEmailNotVerified:
             return LocalizedString("The email is not verified.", comment: "The default localized description of the request email not verified error")
         case .requestTermsOfServiceNotAccepted:
@@ -167,10 +169,9 @@ extension TError: LocalizedError {
             return LocalizedString("The request returned an unauthenticated response.", comment: "The default localized description of the response not authenticated error")
         case .responseMissingJSON:
             return LocalizedString("The request returned an empty JSON response.", comment: "The default localized description of the response missing JSON error")
-        case .responseMalformedJSON:
-            return LocalizedString("The request returned an invalid JSON response.", comment: "The default localized description of the response malformed JSON error")
-        case .responseUnexpectedJSON:
-            return LocalizedString("The request returned an unexpected JSON response.", comment: "The default localized description of the response unexpected JSON error")
+        case .responseMalformedJSON(_, let data, _):
+            let bodyText = String(describing:String(decoding: data, as: UTF8.self))
+            return String(format: LocalizedString("The request returned an invalid JSON response: %@", comment: "The default localized description of the response malformed JSON error (1: the body of the response)"), bodyText)
         case .responseMalformed:
             return LocalizedString("The request returned an invalid response.", comment: "The default localized description of the response malformed data error")
         case .errorResponse(let reason):

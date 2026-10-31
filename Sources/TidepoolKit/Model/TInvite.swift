@@ -9,10 +9,12 @@ import Foundation
 
 public struct TInviteRequest: Codable {
     let email: String
+    let nickname: String?
     let permissions: TPermissions
 
-    public init(email: String, permissions: TPermissions) {
+    public init(email: String, nickname: String?, permissions: TPermissions) {
         self.email = email
+        self.nickname = nickname
         self.permissions = permissions
     }
 }

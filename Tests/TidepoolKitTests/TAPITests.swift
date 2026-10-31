@@ -174,7 +174,7 @@ class TAPIInfoTests: TAPITests {
 
     func testSuccessUsingSessionEnvironment() async {
         let env = TEnvironment(host: "foo.bar.baz", port: 123)
-        let session = TSession(environment: env, accessToken: accessToken, accessTokenExpiration: nil, refreshToken: nil, userId: userId, username: "test@test.com")
+        let session = TSession(environment: env, accessToken: accessToken, accessTokenExpiration: nil, refreshToken: nil, userId: userId, username: "test@test.com", userRoles: ["demo", "patient"])
 
         await api.setSession(session)
 
@@ -222,7 +222,7 @@ class TAPISessionTests: TAPITests {
     override func setUp() async throws {
         try await super.setUp()
 
-        session = TSession(environment: environment, accessToken: accessToken, accessTokenExpiration: nil, refreshToken: refreshToken, userId: userId, username: "test@test.com")
+        session = TSession(environment: environment, accessToken: accessToken, accessTokenExpiration: nil, refreshToken: refreshToken, userId: userId, username: "test@test.com", userRoles: ["demo", "patient"])
         headers = ["X-Tidepool-Session-Token": accessToken, "X-Tidepool-Trace-Session": session.trace!]
         await api.setSession(session)
     }
@@ -342,6 +342,7 @@ class TAPILoginTests: TAPISessionTests {
             refreshToken: session.refreshToken,
             userId: session.userId,
             username: session.username,
+            userRoles: session.userRoles,
             trace: session.trace
         )
 
@@ -632,42 +633,44 @@ class TAPIVerifyDeviceTests: TAPISessionTests {
 class TAPIVerifyAppTests: TAPISessionTests {
     let challenge = randomString
     let attestationKeyID = randomString
+    let clientData = TClientData(challenge: randomString, partner: randomString, partnerData: [randomString: randomString])
     let attestationEncoded = randomString.data(using: .utf8)!.base64EncodedString()
     let assertionEncoded = randomString.data(using: .utf8)!.base64EncodedString()
-
+    
     func testSuccessChallengeAttestation() async throws {
         let challengeRequestBody = TAPI.VerifyAppChallengeRequestBody(keyId: attestationKeyID)
         URLProtocolMock.handlers.append(URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/v1/attestations/challenges", method: "POST", headers: headers, body: challengeRequestBody),
                                                                 success: URLProtocolMock.Success(statusCode: 201, headers: headers, body: TAPI.VerifyAppChallengeResponseBody(challenge: challenge))))
-
+        
         let challenge = try await api.getAttestationChallenge(keyID: attestationKeyID)
         XCTAssertEqual(challenge, self.challenge)
     }
-
+    
     func testSuccessChallengeAssertion() async throws {
         let challengeRequestBody = TAPI.VerifyAppChallengeRequestBody(keyId: attestationKeyID)
         URLProtocolMock.handlers.append(URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/v1/assertions/challenges", method: "POST", headers: headers, body: challengeRequestBody),
                                                                 success: URLProtocolMock.Success(statusCode: 201, headers: headers, body: TAPI.VerifyAppChallengeResponseBody(challenge: challenge))))
-
+        
         let challenge = try await api.getAssertionChallenge(keyID: attestationKeyID)
         XCTAssertEqual(challenge, self.challenge)
     }
-
+    
     func testSuccessAttestation() async throws {
         let attestationRequestBody = TAPI.VerifyAppAttestationVerificationRequestBody(keyId: attestationKeyID, challenge: challenge, attestation: attestationEncoded)
         URLProtocolMock.handlers.append(URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/v1/attestations/verifications", method: "POST", headers: headers, body: attestationRequestBody),
                                                                 success: URLProtocolMock.Success(statusCode: 204, headers: headers)))
-
+        
         let valid = try await api.verifyAttestation(keyID: attestationKeyID, challenge: challenge, attestation: attestationEncoded)
         XCTAssertTrue(valid)
     }
-
-    func testSuccessAssertion() async throws {
-        let assertionRequestBody = TAPI.VerifyAppAssertionVerificationRequestBody(keyId: attestationKeyID, challenge: challenge, assertion: assertionEncoded)
+    
+    func testAssertion() async throws {
+        let assertionRequestBody = TAPI.VerifyAppAssertionVerificationRequestBody(keyId: attestationKeyID, challenge: challenge, assertion: assertionEncoded, clientData: clientData)
+        let expectedResponse = "assertionResponse"
         URLProtocolMock.handlers.append(URLProtocolMock.Handler(validator: URLProtocolMock.Validator(url: "https://test.org/v1/assertions/verifications", method: "POST", headers: headers, body: assertionRequestBody),
-                                                                 success: URLProtocolMock.Success(statusCode: 204, headers: headers)))
-
-        let valid = try await api.verifyAssertion(keyID: attestationKeyID, challenge: challenge, assertion: assertionEncoded)
-        XCTAssertTrue(valid)
+                                                                success: URLProtocolMock.Success(statusCode: 200, body: expectedResponse)))
+        
+        let response = try await api.verifyAssertion(keyID: attestationKeyID, challenge: challenge, assertion: assertionEncoded, clientData: clientData)
+        XCTAssertEqual(String(bytes: response, encoding: .utf8), "\"\(expectedResponse)\"")
     }
 }
